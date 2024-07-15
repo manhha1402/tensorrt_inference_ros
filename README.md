@@ -1,2 +1,2 @@
-# neura_snp_path_generator
+# tensorrt_inference_ros
 
