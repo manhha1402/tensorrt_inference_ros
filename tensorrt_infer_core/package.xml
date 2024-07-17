@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>tensorrt_inference_ros</name>
+  <name>tensorrt_infer_core</name>
   <version>0.0.1</version>
-  <description>The tensorrt_inference_ros package</description>
+  <description>The tensorrt_infer_core package</description>
 
   <maintainer email="manhha1402@gmail.com">Manh-Ha Hoang</maintainer>
   <license>NEURA Robotics</license>
@@ -16,8 +16,8 @@
 
   <depend>ament_index_cpp</depend>
   <depend>rclcpp</depend>
-  <depend>rclcpp_action</depend>
-
+  <depend>message_filters</depend>
+  <depend>sensor_msgs</depend>
   <depend>tf2_eigen</depend>
   <member_of_group>rosidl_interface_packages</member_of_group>
 

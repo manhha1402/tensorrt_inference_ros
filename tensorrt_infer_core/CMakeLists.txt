@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.2)
-project(tensorrt_inference_ros)
+project(tensorrt_infer_core)
 include(cmake/project_version.cmake)
 
 # Save the command line compile commands in the build output
@@ -27,15 +27,20 @@ find_package(ament_index_cpp REQUIRED)
 
 # dependencies
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_action REQUIRED)
-#find_package(tf2_geometry_msgs)
+find_package(message_filters REQUIRED)
+find_package(sensor_msgs)
 find_package(tf2_eigen)
 set(dependencies
   rclcpp
-  rclcpp_action
+  sensor_msgs
+  message_filters
   ament_index_cpp
   tf2_eigen
 )
+
+
+
+
 
 
 
@@ -53,19 +58,52 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED NO_MODULE PATHS /usr/local NO_DEFAULT_PATH)
 set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda)
 find_package(CUDA REQUIRED)
+find_package(fmt REQUIRED)
+
+
+file(GLOB_RECURSE CPP_ALL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/detection_node.cpp")
+add_library(${PROJECT_NAME}_lib SHARED
+    ${CPP_ALL_SOURCE_FILES}
+    )
+target_include_directories(
+  ${PROJECT_NAME}_lib PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+  ${CUDA_INCLUDE_DIRS}
+  PRIVATE ${CMAKE_CURRENT_BINARY_DIR}  # for private headers generated during build
+)
+ament_target_dependencies(${PROJECT_NAME}_lib ${dependencies})
+target_link_libraries(${PROJECT_NAME}_lib Eigen3::Eigen ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES} fmt)
+
+
+
+
+
 
 # Mark executables and/or libraries for installation 
 add_executable(tensorrt_inference_node nodes/tensorrt_inference_node.cpp)
-target_link_libraries(tensorrt_inference_node ${OpenCV_LIBRARIES} ${CUDA_LIBRARIES})
-target_include_directories(tensorrt_inference_node PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"   #find header files
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-    ${CUDA_INCLUDE_DIRS}
-    )   # to install header files
-
-ament_target_dependencies(tensorrt_inference_node ${dependencies})
+target_link_libraries(tensorrt_inference_node ${PROJECT_NAME}_lib)
 
 
+###########
+# INSTALL #
+###########
+# Install includes.
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+
+# Install the library target.
+install(
+  TARGETS ${PROJECT_NAME}_lib
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 install(TARGETS tensorrt_inference_node
   RUNTIME DESTINATION lib/${PROJECT_NAME}
