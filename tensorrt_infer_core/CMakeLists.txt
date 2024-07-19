@@ -14,6 +14,7 @@ if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 message( STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}" )
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 
 
@@ -29,17 +30,18 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(sensor_msgs)
+find_package(realsense2_camera_msgs)
 find_package(tf2_eigen)
+find_package(neura_scan_utils)
 set(dependencies
   rclcpp
   sensor_msgs
   message_filters
+  neura_scan_utils
   ament_index_cpp
+  realsense2_camera_msgs
   tf2_eigen
 )
-
-
-
 
 
 
@@ -61,6 +63,17 @@ find_package(CUDA REQUIRED)
 find_package(fmt REQUIRED)
 
 
+###Open3D############
+find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
+# MESSAGE("Open3D version : ${Open3D_VERSION}")
+# MESSAGE("Open3D DIR : ${Open3D_DIR}")
+# list(APPEND Open3D_LIBRARIES dl)
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${Open3D_C_FLAGS}")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Open3D_CXX_FLAGS}")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${Open3D_EXE_LINKER_FLAGS}")
+# link_directories(${Open3D_LIBRARY_DIRS})
+
+
 file(GLOB_RECURSE CPP_ALL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/detection_node.cpp")
 add_library(${PROJECT_NAME}_lib SHARED
     ${CPP_ALL_SOURCE_FILES}
@@ -73,7 +86,7 @@ target_include_directories(
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}  # for private headers generated during build
 )
 ament_target_dependencies(${PROJECT_NAME}_lib ${dependencies})
-target_link_libraries(${PROJECT_NAME}_lib Eigen3::Eigen ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES} fmt)
+target_link_libraries(${PROJECT_NAME}_lib Eigen3::Eigen tensorrt_inference_lib ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES} ${Open3D_LIBRARIES} fmt)
 
 
 

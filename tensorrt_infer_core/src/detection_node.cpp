@@ -1,24 +1,35 @@
 #include <tensorrt_infer_core/detection_node.hpp>
+#include <memory>
+using std::placeholders::_1;
+
 namespace tensorrt_infer_core
 {
-    DetectionNode::DetectionNode() : Node("image_sync_node")
+    DetectionNode::DetectionNode() : Node("detection_node")
     {
-        // Create subscribers for depth and color topics
-        depth_sub_.subscribe(this, "/camera/depth/image_raw");
-        color_sub_.subscribe(this, "/camera/color/image_raw");
 
-        // Synchronize the depth and color topics
-        sync_.reset(new Sync(MySyncPolicy(10), depth_sub_, color_sub_));
-        sync_->registerCallback(std::bind(&DetectionNode::detect_callback, this, std::placeholders::_1, std::placeholders::_2));
+        const std::string home_dir = std::getenv("HOME");
+        const std::string onnx_path = home_dir + "/data/weights/yolov8x-seg.onnx";
+        yolo8_ = std::make_shared<tensorrt_inference::YoloV8>(onnx_path, config_);
+        res_pub_ = create_publisher<sensor_msgs::msg::Image>("yolo_image", 10);
+        rgbd_sub_ = create_subscription<realsense2_camera_msgs::msg::RGBD>(
+            "/camera/camera/rgbd", 10, std::bind(&DetectionNode::detect_callback, this, _1));
     }
 
-    void DetectionNode::detect_callback(const sensor_msgs::msg::Image::ConstSharedPtr &depth_msg, const sensor_msgs::msg::Image::ConstSharedPtr &color_msg)
+    void DetectionNode::detect_callback(const realsense2_camera_msgs::msg::RGBD::ConstSharedPtr &rgbd_msg)
     {
-        RCLCPP_INFO(this->get_logger(), "Synchronized depth and color messages received.");
-        // Add your processing code here
-        // Example: Print the timestamps
-        RCLCPP_INFO(this->get_logger(), "Depth Timestamp: %d", depth_msg->header.stamp.sec);
-        RCLCPP_INFO(this->get_logger(), "Color Timestamp: %d", color_msg->header.stamp.sec);
+        cv::Mat rgb, depth;
+        neura_scan_utils::conversions::rosToOpenCV(rgbd_msg->rgb, rgb);
+        neura_scan_utils::conversions::rosToOpenCV(rgbd_msg->depth, depth);
+        if (rgb.empty())
+        {
+            return;
+        }
+        // Run inference
+        const auto objects = yolo8_->detectObjects(rgb);
+        // Draw the bounding boxes on the image
+        yolo8_->drawObjectLabels(rgb, objects);
+        sensor_msgs::msg::Image::SharedPtr out_image_msg = neura_scan_utils::conversions::openCVToRos(rgb);
+        res_pub_->publish(*out_image_msg);
     }
 
 }

@@ -6,7 +6,7 @@
   <description>The tensorrt_infer_core package</description>
 
   <maintainer email="manhha1402@gmail.com">Manh-Ha Hoang</maintainer>
-  <license>NEURA Robotics</license>
+  <license>MIT</license>
   <author>Manh-Ha Hoang</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -19,6 +19,8 @@
   <depend>message_filters</depend>
   <depend>sensor_msgs</depend>
   <depend>tf2_eigen</depend>
+  <depend>realsense2_camera_msgs</depend>
+  <depend>neura_scan_utils</depend>
   <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
