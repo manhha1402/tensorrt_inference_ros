@@ -1,0 +1,14 @@
+tensorrt_inference_node: #executable 
+  ros__parameters:
+    prob_thres: 0.25
+    nms_thres: 0.65
+    top_k: 100
+    seg_channels: 32
+    seg_w: 160
+    seg_h: 160
+    segmentation_thres: 0.5
+    num_kps: 17
+    kps_thres: 0.4112
+    detected_class: ["all"]
+    model_name: 'yolov8x-seg'
+

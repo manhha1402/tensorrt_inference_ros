@@ -61,22 +61,15 @@ find_package(OpenCV REQUIRED NO_MODULE PATHS /usr/local NO_DEFAULT_PATH)
 set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda)
 find_package(CUDA REQUIRED)
 find_package(fmt REQUIRED)
-
+find_package(yaml-cpp)
 
 ###Open3D############
 find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
-# MESSAGE("Open3D version : ${Open3D_VERSION}")
-# MESSAGE("Open3D DIR : ${Open3D_DIR}")
-# list(APPEND Open3D_LIBRARIES dl)
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${Open3D_C_FLAGS}")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Open3D_CXX_FLAGS}")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${Open3D_EXE_LINKER_FLAGS}")
-# link_directories(${Open3D_LIBRARY_DIRS})
 
-
-file(GLOB_RECURSE CPP_ALL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/detection_node.cpp")
 add_library(${PROJECT_NAME}_lib SHARED
-    ${CPP_ALL_SOURCE_FILES}
+    src/dynamic_params.cpp
+    src/ros_param_backend.cpp
+    src/detection_node.cpp
     )
 target_include_directories(
   ${PROJECT_NAME}_lib PUBLIC 
@@ -86,7 +79,15 @@ target_include_directories(
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}  # for private headers generated during build
 )
 ament_target_dependencies(${PROJECT_NAME}_lib ${dependencies})
-target_link_libraries(${PROJECT_NAME}_lib Eigen3::Eigen tensorrt_inference_lib ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES} ${Open3D_LIBRARIES} fmt)
+target_link_libraries(${PROJECT_NAME}_lib 
+                      tensorrt_inference_lib
+                      Eigen3::Eigen 
+                      ${CUDA_LIBRARIES} 
+                      ${OpenCV_LIBRARIES}
+                      ${Open3D_LIBRARIES} 
+                      ${YAML_CPP_LIBRARIES} 
+                      fmt
+                      )
 
 
 
