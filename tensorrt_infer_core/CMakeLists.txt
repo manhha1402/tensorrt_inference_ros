@@ -32,19 +32,14 @@ find_package(message_filters REQUIRED)
 find_package(sensor_msgs)
 find_package(realsense2_camera_msgs)
 find_package(tf2_eigen)
-find_package(neura_scan_utils)
 set(dependencies
   rclcpp
   sensor_msgs
   message_filters
-  neura_scan_utils
   ament_index_cpp
   realsense2_camera_msgs
   tf2_eigen
 )
-
-
-
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -70,7 +65,18 @@ add_library(${PROJECT_NAME}_lib SHARED
     src/dynamic_params.cpp
     src/ros_param_backend.cpp
     src/detection_node.cpp
+    src/conversions.cpp
     )
+if(NOT DEFINED ENV{ROS_DISTRO})
+  message(FATAL_ERROR "ROS_DISTRO is not defined." )
+endif()
+if("$ENV{ROS_DISTRO}" STREQUAL "foxy")
+  message(STATUS "Build for ROS2 Foxy")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFOXY")
+elseif("$ENV{ROS_DISTRO}" STREQUAL "humble")
+  message(STATUS "Build for ROS2 Humble")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHUMBLE")
+endif()
 target_include_directories(
   ${PROJECT_NAME}_lib PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
