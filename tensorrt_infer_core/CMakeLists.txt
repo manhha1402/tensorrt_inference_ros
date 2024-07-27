@@ -30,14 +30,14 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(sensor_msgs)
-find_package(realsense2_camera_msgs)
+#find_package(realsense2_camera_msgs)
 find_package(tf2_eigen)
 set(dependencies
   rclcpp
   sensor_msgs
   message_filters
   ament_index_cpp
-  realsense2_camera_msgs
+ # realsense2_camera_msgs
   tf2_eigen
 )
 
@@ -59,7 +59,7 @@ find_package(fmt REQUIRED)
 find_package(yaml-cpp)
 
 ###Open3D############
-find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
+#find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
 
 add_library(${PROJECT_NAME}_lib SHARED
     src/detection_node.cpp
@@ -90,7 +90,7 @@ target_link_libraries(${PROJECT_NAME}_lib
                       Eigen3::Eigen 
                       ${CUDA_LIBRARIES} 
                       ${OpenCV_LIBRARIES}
-                      ${Open3D_LIBRARIES} 
+                      #${Open3D_LIBRARIES} 
                       ${YAML_CPP_LIBRARIES} 
                       fmt
                       )
