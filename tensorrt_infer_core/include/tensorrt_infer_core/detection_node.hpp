@@ -4,7 +4,7 @@
 #include "realsense2_camera_msgs/msg/rgbd.hpp"
 #include <tensorrt_inference/yolov8.h>
 #include <neura_scan_utils/conversions.hpp>
-#include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <neura_scan_utils/dynamic_params.hpp>
 namespace tensorrt_infer_core
 {
     struct Params
@@ -30,9 +30,7 @@ namespace tensorrt_infer_core
         tensorrt_inference::YoloV8Config yolo_config_;
         std::shared_ptr<tensorrt_inference::YoloV8> yolo8_;
         Params params_;
-        rcl_interfaces::msg::SetParametersResult parametersCallback(
-            const std::vector<rclcpp::Parameter> &parameters);
-        OnSetParametersCallbackHandle::SharedPtr callback_handle_;
+        std::shared_ptr<neura_scan_utils::Parameters> dynamic_params_;
 
     private:
         void initParameters();

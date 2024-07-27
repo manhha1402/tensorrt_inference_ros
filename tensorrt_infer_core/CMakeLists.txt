@@ -67,8 +67,6 @@ find_package(yaml-cpp)
 find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
 
 add_library(${PROJECT_NAME}_lib SHARED
-    src/dynamic_params.cpp
-    src/ros_param_backend.cpp
     src/detection_node.cpp
     )
 target_include_directories(
