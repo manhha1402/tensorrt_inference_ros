@@ -62,10 +62,10 @@ find_package(yaml-cpp)
 find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
 
 add_library(${PROJECT_NAME}_lib SHARED
-    src/dynamic_params.cpp
-    src/ros_param_backend.cpp
     src/detection_node.cpp
     src/conversions.cpp
+    src/dynamic_params.cpp
+    src/ros_param_backend.cpp
     )
 if(NOT DEFINED ENV{ROS_DISTRO})
   message(FATAL_ERROR "ROS_DISTRO is not defined." )
@@ -94,11 +94,6 @@ target_link_libraries(${PROJECT_NAME}_lib
                       ${YAML_CPP_LIBRARIES} 
                       fmt
                       )
-
-
-
-
-
 
 # Mark executables and/or libraries for installation 
 add_executable(tensorrt_inference_node nodes/tensorrt_inference_node.cpp)
