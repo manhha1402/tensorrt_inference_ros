@@ -9,18 +9,6 @@ namespace tensorrt_infer_core
 
         // Declare parameters
         RCLCPP_INFO(get_logger(), "Creating tensorrt detection node");
-        // declare_parameter("prob_thres", yolo_config_.prob_thres);
-        // declare_parameter("nms_thres", yolo_config_.nms_thres);
-        // declare_parameter("top_k", yolo_config_.top_k);
-        // declare_parameter("seg_channels", yolo_config_.seg_channels);
-        // declare_parameter("seg_w", yolo_config_.seg_w);
-        // declare_parameter("seg_h", yolo_config_.seg_h);
-        // declare_parameter("segmentation_thres", yolo_config_.segmentation_thres);
-        // declare_parameter("num_kps", yolo_config_.num_kps);
-        // declare_parameter("kps_thres", yolo_config_.kps_thres);
-        // declare_parameter("detected_class", params_.detected_class);
-        // declare_parameter("model_name", params_.model_name);
-        // initParameters();
         rcl_interfaces::msg::ParameterDescriptor crnt_descriptor;
         dynamic_params_ = std::make_shared<neura_scan_utils::Parameters>(*this);
         dynamic_params_->setParam<float>(
@@ -57,8 +45,20 @@ namespace tensorrt_infer_core
 
         dynamic_params_->setParam<std::vector<std::string>>(
             "detected_class", params_.detected_class, [this](const rclcpp::Parameter &parameter)
-            { params_.detected_class = parameter.get_value<std::vector<std::string>>(); });
+            { params_.detected_class = parameter.get_value<std::vector<std::string>>();
+            if (params_.detected_class.size() == 1 && params_.detected_class[0].compare("all") == 0)
+                {
+                    params_.detected_class.clear();
+                } });
 
+        dynamic_params_->setParam<std::string>(
+            "model_name", params_.model_name, [this](const rclcpp::Parameter &parameter)
+            {
+                params_.model_name = parameter.get_value<std::string>();
+                bool ret = initModel(params_.model_name);
+                // detect all classes again
+                // params_.detected_class.clear();
+            });
         bool ret = initModel(params_.model_name);
         res_pub_ = create_publisher<sensor_msgs::msg::Image>("yolo_image", 10);
         rgbd_sub_ = create_subscription<realsense2_camera_msgs::msg::RGBD>(

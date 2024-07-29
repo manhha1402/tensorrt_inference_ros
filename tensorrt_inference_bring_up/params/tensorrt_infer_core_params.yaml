@@ -8,7 +8,7 @@ tensorrt_inference_node: #executable
     seg_h: 160
     segmentation_thres: 0.5
     num_kps: 17
-    kps_thres: 0.4112
+    kps_thres: 0.5
     detected_class: ["all"]
     model_name: 'yolov8x-seg'
 

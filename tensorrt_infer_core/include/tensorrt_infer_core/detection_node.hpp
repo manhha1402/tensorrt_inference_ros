@@ -9,11 +9,12 @@ namespace tensorrt_infer_core
 {
     struct Params
     {
-        Params()
+        Params() : model_name("yolov8x-seg"),
+                   model_path(std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights")
         {
         }
         std::string model_name;
-        std::filesystem::path model_path = std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights";
+        std::filesystem::path model_path;
         std::vector<std::string> detected_class;
     };
     class DetectionNode : public rclcpp::Node
