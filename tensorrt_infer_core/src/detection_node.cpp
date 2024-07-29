@@ -9,7 +9,6 @@ namespace tensorrt_infer_core
 
         // Declare parameters
         RCLCPP_INFO(get_logger(), "Creating tensorrt detection node");
-        rcl_interfaces::msg::ParameterDescriptor crnt_descriptor;
         dynamic_params_ = std::make_shared<neura_scan_utils::Parameters>(*this);
         dynamic_params_->setParam<float>(
             "prob_thres", yolo_config_.prob_thres, [this](const rclcpp::Parameter &parameter)
@@ -57,84 +56,12 @@ namespace tensorrt_infer_core
                 params_.model_name = parameter.get_value<std::string>();
                 bool ret = initModel(params_.model_name);
                 // detect all classes again
-                // params_.detected_class.clear();
-            });
+                params_.detected_class.clear(); });
         bool ret = initModel(params_.model_name);
         res_pub_ = create_publisher<sensor_msgs::msg::Image>("yolo_image", 10);
         rgbd_sub_ = create_subscription<realsense2_camera_msgs::msg::RGBD>(
             "/camera/camera/rgbd", 10, std::bind(&DetectionNode::detect_callback, this, std::placeholders::_1));
     }
-    void DetectionNode::initParameters()
-    {
-        // Declare parameters
-        get_parameter_or("prob_thres", yolo_config_.prob_thres, yolo_config_.prob_thres);
-        get_parameter_or("nms_thres", yolo_config_.nms_thres, yolo_config_.nms_thres);
-        get_parameter_or("top_k", yolo_config_.top_k, yolo_config_.top_k);
-        get_parameter_or("seg_channels", yolo_config_.seg_channels, yolo_config_.seg_channels);
-        get_parameter_or("seg_w", yolo_config_.seg_w, yolo_config_.seg_w);
-        get_parameter_or("seg_h", yolo_config_.seg_h, yolo_config_.seg_h);
-        get_parameter_or("segmentation_thres", yolo_config_.segmentation_thres, yolo_config_.segmentation_thres);
-        get_parameter_or("num_kps", yolo_config_.num_kps, yolo_config_.num_kps);
-        get_parameter_or("kps_thres", yolo_config_.kps_thres, yolo_config_.kps_thres);
-        get_parameter_or("detected_class", params_.detected_class, params_.detected_class);
-        get_parameter_or("model_name", params_.model_name, params_.model_name);
-
-        if (params_.detected_class.size() == 1 && params_.detected_class[0].compare("all") == 0)
-        {
-            params_.detected_class.clear();
-        }
-        RCLCPP_INFO(get_logger(), "initParameters done!");
-    }
-    // rcl_interfaces::msg::SetParametersResult DetectionNode::parametersCallback(
-    //     const std::vector<rclcpp::Parameter> &parameters)
-    // {
-    //     RCLCPP_INFO(get_logger(), "parameters callback");
-    //     rcl_interfaces::msg::SetParametersResult result;
-    //     result.successful = false;
-    //     result.reason = "";
-    //     for (const auto &param : parameters)
-    //     {
-    //         if (param.get_name() == "detected_class")
-    //         {
-    //             if (param.get_type() == rclcpp::ParameterType::PARAMETER_STRING_ARRAY)
-    //             {
-    //                 std::cout << "detected_class changed" << std::endl;
-    //                 if (param.as_string_array().size() == 1 && param.as_string_array()[0].compare("all") == 0)
-    //                 {
-    //                     params_.detected_class.clear();
-    //                 }
-    //                 else
-    //                 {
-    //                     params_.detected_class = param.as_string_array();
-    //                 }
-    //                 result.successful = true;
-    //             }
-    //         }
-    //         if (param.get_name() == "model_name")
-    //         {
-    //             if (param.get_type() == rclcpp::ParameterType::PARAMETER_STRING)
-    //             {
-    //                 std::cout << "model name changed, init model" << std::endl;
-    //                 params_.model_name = param.as_string();
-    //                 bool ret = initModel(params_.model_name);
-    //                 // detect all classes again
-    //                 params_.detected_class.clear();
-    //                 result.successful = true;
-    //             }
-    //         }
-    //         if (param.get_name() == "prob_thres")
-    //         {
-    //             if (param.get_type() == rclcpp::ParameterType::PARAMETER_DOUBLE)
-    //             {
-    //                 std::cout << "prob_thres changed" << std::endl;
-    //                 yolo_config_.prob_thres = param.as_double();
-    //                 result.successful = true;
-    //             }
-    //         }
-    //     }
-
-    //     return result;
-    // }
     bool DetectionNode::initModel(const std::string &model_name)
     {
         // Load config file
