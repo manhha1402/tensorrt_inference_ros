@@ -1,12 +1,12 @@
 #include <yaml-cpp/yaml.h>
 
 #include <memory>
-#include <tensorrt_infer_core/detection_node.hpp>
+#include <tensorrt_infer_core/face.hpp>
 using std::placeholders::_1;
 
 namespace tensorrt_infer_core
 {
-    DetectionNode::DetectionNode(const rclcpp::NodeOptions &options,
+    FaceDetectionNode::FaceDetectionNode(const rclcpp::NodeOptions &options,
                                  const std::string node_name)
         : Node(node_name, options)
     {
@@ -52,10 +52,10 @@ namespace tensorrt_infer_core
         res_pub_ = create_publisher<sensor_msgs::msg::Image>("yolo_image", 10);
         rgb_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/tapo1/color/image_raw", 10,
-            std::bind(&DetectionNode::detect_rgb_callback, this, _1));
+            std::bind(&FaceDetectionNode::detect_rgb_callback, this, _1));
     }
 
-    bool DetectionNode::initModel(const std::string &model_name)
+    bool FaceDetectionNode::initModel(const std::string &model_name)
     {
         std::filesystem::path model_path = std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights" / model_name;
         std::string config_file = model_path.string() + "/config.yaml";
@@ -65,7 +65,7 @@ namespace tensorrt_infer_core
         return true;
     }
 
-    void DetectionNode::detect_rgb_callback(
+    void FaceDetectionNode::detect_rgb_callback(
         const sensor_msgs::msg::Image::SharedPtr rgb_msg) const
     {
         cv::Mat rgb;

@@ -15,7 +15,7 @@ void rosToOpenCV(const sensor_msgs::msg::Image &msg_image, cv::Mat &cv_image) {
   } else {
     RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
                  "[rosToOpenCV] Unsupported image format %s ",
-                 msg_image.encoding);
+                msg_image.encoding);
     return;
   }
   size_t size = msg_image.step * cv_image.rows;

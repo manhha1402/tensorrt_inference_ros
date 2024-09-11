@@ -1,5 +1,5 @@
 #pragma once
-#include <tensorrt_inference/yolov8.h>
+#include <tensorrt_inference/retinaface.h>
 #include <filesystem>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
 #include <tensorrt_infer_core/conversions.hpp>
@@ -13,7 +13,7 @@ namespace tensorrt_infer_core
 {
     struct Params
     {
-        Params() : model_name("yolov8x-seg"),
+        Params() : model_name("FaceDetector"),
                    model_path(std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights")
 
         {
@@ -23,11 +23,11 @@ namespace tensorrt_infer_core
         std::vector<std::string> detected_class;
         tensorrt_inference::DetectionParams detect_params;
     };
-    class DetectionNode : public rclcpp::Node
+    class FaceDetectionNode : public rclcpp::Node
     {
     public:
-        DetectionNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions(),
-                      const std::string node_name = "detection_node");
+        FaceDetectionNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions(),
+                          const std::string node_name = "face_detection_node");
         bool initModel(const std::string &model_name);
         void
         detect_rgb_callback(const sensor_msgs::msg::Image::SharedPtr rgb_msg) const;
