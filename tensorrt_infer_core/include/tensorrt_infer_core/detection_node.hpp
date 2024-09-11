@@ -1,5 +1,5 @@
 #pragma once
-#include <tensorrt_inference/yolov8.h>
+#include <tensorrt_inference/tensorrt_inference.h>
 
 #include <filesystem>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
@@ -39,7 +39,7 @@ namespace tensorrt_infer_core
 
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr res_pub_;
 
-        std::shared_ptr<tensorrt_inference::YoloV8> yolo8_;
+        std::shared_ptr<tensorrt_inference::Detection> detector_;
         Params params_;
     };
 

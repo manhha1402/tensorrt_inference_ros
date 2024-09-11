@@ -90,7 +90,6 @@ target_link_libraries(${PROJECT_NAME}_lib
                       Eigen3::Eigen 
                       ${CUDA_LIBRARIES} 
                       ${OpenCV_LIBRARIES}
-                      #${Open3D_LIBRARIES} 
                       ${YAML_CPP_LIBRARIES} 
                       fmt
                       )
