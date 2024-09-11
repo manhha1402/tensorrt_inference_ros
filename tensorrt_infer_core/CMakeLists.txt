@@ -30,14 +30,14 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(sensor_msgs)
-#find_package(realsense2_camera_msgs)
+find_package(realsense2_camera_msgs)
 find_package(tf2_eigen)
 set(dependencies
   rclcpp
   sensor_msgs
   message_filters
   ament_index_cpp
- # realsense2_camera_msgs
+  realsense2_camera_msgs
   tf2_eigen
 )
 
