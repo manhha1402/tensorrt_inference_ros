@@ -57,22 +57,23 @@ namespace tensorrt_infer_core
 
     bool DetectionNode::initModel(const std::string &model_name)
     {
-        // Load config file
-        std::string model_path = (params_.model_path / model_name).string();
-        std::string config_file = model_path + "/config.yaml";
-        YAML::Node config = YAML::LoadFile(config_file);
+
         // config_.classNames
         if (model_name.find("yolov8") != std::string::npos)
         {
-            detector_ = std::make_shared<tensorrt_inference::YoloV8>(model_path, config);
+            detector_ = std::make_shared<tensorrt_inference::YoloV8>(model_name);
         }
         else if (model_name.find("yolov9") != std::string::npos)
         {
-            detector_ = std::make_shared<tensorrt_inference::YoloV9>(model_path, config);
+            detector_ = std::make_shared<tensorrt_inference::YoloV9>(model_name);
         }
         else if (model_name.find("face") != std::string::npos)
         {
-            detector_ = std::make_shared<tensorrt_inference::RetinaFace>(model_path, config);
+            detector_ = std::make_shared<tensorrt_inference::RetinaFace>(model_name);
+        }
+        else if (model_name.find("license_plate_detector") != std::string::npos)
+        {
+            detector_ = std::make_shared<tensorrt_inference::YoloV8>(model_name);
         }
         else
         {
@@ -92,11 +93,11 @@ namespace tensorrt_infer_core
             return;
         }
         // Run inference
-        const auto objects = detector_->detect(rgb, params_.detect_params);
+        const auto objects = detector_->detect(rgb, params_.detect_params, params_.detected_class);
         // Draw the bounding boxes on the image
-        detector_->drawObjectLabels(rgb, objects, params_.detect_params, params_.detected_class);
-        cv::cvtColor(rgb, rgb, cv::COLOR_RGB2BGR);
-        res_pub_->publish(*tensorrt_infer_core::openCVToRos(rgb));
+        cv::Mat result = detector_->drawObjectLabels(rgb, objects, params_.detect_params);
+        cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
+        res_pub_->publish(*tensorrt_infer_core::openCVToRos(result));
     }
 
 } // namespace tensorrt_infer_core

@@ -1,8 +1,8 @@
 tensorrt_inference_node: #executable 
   ros__parameters:
-    obj_thres: 0.4
-    nms_thres: 0.5
-    seg_thres: 0.5
+    obj_thres: 0.6
+    nms_thres: 0.6
+    seg_thres: 0.6
     kps_thresh: 0.4112
     num_detect: 20
     detected_class: ["all"]
