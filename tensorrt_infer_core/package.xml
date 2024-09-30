@@ -20,6 +20,7 @@
   <depend>sensor_msgs</depend>
   <depend>tf2_eigen</depend>
   <depend>realsense2_camera_msgs</depend>
+  <depend>tensorrt_infer_msgs</depend>
   <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>

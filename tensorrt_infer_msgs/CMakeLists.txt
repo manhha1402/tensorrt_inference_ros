@@ -31,7 +31,7 @@ set(msg_files
 )
 
 set(srv_files
-  #"srv/SelectModel.srv"
+  "srv/DetectLicencePlate.srv"
   #"srv/TrainModel.srv"
   #"srv/GetModel.srv"
   #"srv/GetMethod.srv"

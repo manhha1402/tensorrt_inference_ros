@@ -6,7 +6,10 @@
 int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<tensorrt_infer_core::DetectionNode>());
+  rclcpp::executors::MultiThreadedExecutor executor;
+  auto detection_node = std::make_shared<tensorrt_infer_core::DetectionNode>();
+  executor.add_node(detection_node);
+  executor.spin();
   rclcpp::shutdown();
 
   return 0;

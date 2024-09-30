@@ -49,7 +49,7 @@ namespace tensorrt_infer_core
                 // detect all classes again
                 params_.detected_class.clear(); });
         bool ret = initModel(params_.model_name);
-        res_pub_ = create_publisher<sensor_msgs::msg::Image>("yolo_image", 10);
+        res_pub_ = create_publisher<sensor_msgs::msg::Image>("tensorrt_result", 10);
         rgbd_sub_ = this->create_subscription<realsense2_camera_msgs::msg::RGBD>(
             "/camera/camera/rgbd", 10,
             std::bind(&DetectionNode::detect_rgbd_callback, this, _1));
@@ -71,7 +71,7 @@ namespace tensorrt_infer_core
         {
             detector_ = std::make_shared<tensorrt_inference::RetinaFace>(model_name);
         }
-        else if (model_name.find("license_plate_detector") != std::string::npos)
+        else if (model_name.find("plate_detection") != std::string::npos)
         {
             detector_ = std::make_shared<tensorrt_inference::YoloV8>(model_name);
         }
