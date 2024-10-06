@@ -66,6 +66,7 @@ include CMakeFiles/tensorrt_infer_msgs.dir/compiler_depend.make
 # Include the progress variables for this target.
 include CMakeFiles/tensorrt_infer_msgs.dir/progress.make
 
+CMakeFiles/tensorrt_infer_msgs: /home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/msg/FaceRecognition.msg
 CMakeFiles/tensorrt_infer_msgs: /home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/srv/DetectLicencePlate.srv
 CMakeFiles/tensorrt_infer_msgs: rosidl_cmake/srv/DetectLicencePlate_Request.msg
 CMakeFiles/tensorrt_infer_msgs: rosidl_cmake/srv/DetectLicencePlate_Response.msg

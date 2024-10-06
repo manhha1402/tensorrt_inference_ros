@@ -33,8 +33,13 @@ namespace tensorrt_infer_core
         void
         detect_rgbd_callback(const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const;
 
+        void
+        detect_rgb_callback(const sensor_msgs::msg::Image::SharedPtr rgb_msg) const;
+
     private:
         rclcpp::Subscription<realsense2_camera_msgs::msg::RGBD>::SharedPtr rgbd_sub_;
+        rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr rgb_sub_;
+
         std::shared_ptr<tensorrt_infer_core::Parameters> dynamic_params_;
 
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr res_pub_;

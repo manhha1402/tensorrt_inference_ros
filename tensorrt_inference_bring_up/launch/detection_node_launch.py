@@ -45,6 +45,6 @@ def generate_launch_description():
     ld.add_action(SetEnvironmentVariable('RCUTILS_COLORIZED_OUTPUT', '1'))
     ld.add_action(SetEnvironmentVariable('RCUTILS_CONSOLE_OUTPUT_FORMAT', '[{severity}]: {message}'))
     ld.add_action(tensorrt_inference_node)
-    ld.add_action(license_plate_detector_node)
+    #ld.add_action(license_plate_detector_node)
 
     return ld

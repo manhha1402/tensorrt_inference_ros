@@ -1,5 +1,9 @@
 file(REMOVE_RECURSE
   "CMakeFiles/tensorrt_infer_msgs__cpp"
+  "rosidl_generator_cpp/tensorrt_infer_msgs/msg/detail/face_recognition__builder.hpp"
+  "rosidl_generator_cpp/tensorrt_infer_msgs/msg/detail/face_recognition__struct.hpp"
+  "rosidl_generator_cpp/tensorrt_infer_msgs/msg/detail/face_recognition__traits.hpp"
+  "rosidl_generator_cpp/tensorrt_infer_msgs/msg/face_recognition.hpp"
   "rosidl_generator_cpp/tensorrt_infer_msgs/srv/detail/detect_licence_plate__builder.hpp"
   "rosidl_generator_cpp/tensorrt_infer_msgs/srv/detail/detect_licence_plate__struct.hpp"
   "rosidl_generator_cpp/tensorrt_infer_msgs/srv/detail/detect_licence_plate__traits.hpp"

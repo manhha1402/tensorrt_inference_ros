@@ -61,15 +61,25 @@ find_package(CUDA REQUIRED)
 find_package(fmt REQUIRED)
 find_package(yaml-cpp)
 
+pkg_check_modules(LIBMONGOCXX  libmongocxx REQUIRED)
+if (${LIBMONGOCXX_FOUND})
+  message("found mongocxx")
+else ()
+  message(WARNING "not found mongocxx")
+endif ()
+include_directories("/usr/local/include/mongocxx/v_noabi")
+include_directories("/usr/local/include/bsoncxx/v_noabi")
+
 ###Open3D############
 #find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
 
 add_library(${PROJECT_NAME}_lib SHARED
-    src/detection_node.cpp
     src/conversions.cpp
     src/dynamic_params.cpp
     src/ros_param_backend.cpp
     src/licence_plate_detector.cpp
+    src/detection_node.cpp
+    src/face_recognition_node.cpp
     )
 if(NOT DEFINED ENV{ROS_DISTRO})
   message(FATAL_ERROR "ROS_DISTRO is not defined." )
@@ -96,6 +106,7 @@ target_link_libraries(${PROJECT_NAME}_lib
                       ${OpenCV_LIBRARIES}
                       ${YAML_CPP_LIBRARIES} 
                       fmt
+                      ${LIBMONGOCXX_LIBRARIES}
                       )
 
 # Mark executables and/or libraries for installation 

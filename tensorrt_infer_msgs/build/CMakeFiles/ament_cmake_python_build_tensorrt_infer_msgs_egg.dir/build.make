@@ -67,7 +67,7 @@ include CMakeFiles/ament_cmake_python_build_tensorrt_infer_msgs_egg.dir/compiler
 include CMakeFiles/ament_cmake_python_build_tensorrt_infer_msgs_egg.dir/progress.make
 
 CMakeFiles/ament_cmake_python_build_tensorrt_infer_msgs_egg:
-	cd /home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/build/ament_cmake_python/tensorrt_infer_msgs && /home/neura_ai/neura/perception_ws/venv/bin/python3 setup.py egg_info
+	cd /home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/build/ament_cmake_python/tensorrt_infer_msgs && /usr/bin/python3 setup.py egg_info
 
 ament_cmake_python_build_tensorrt_infer_msgs_egg: CMakeFiles/ament_cmake_python_build_tensorrt_infer_msgs_egg
 ament_cmake_python_build_tensorrt_infer_msgs_egg: CMakeFiles/ament_cmake_python_build_tensorrt_infer_msgs_egg.dir/build.make

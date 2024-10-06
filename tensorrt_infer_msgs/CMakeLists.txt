@@ -25,9 +25,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
-  #"msg/ReturnCode.msg"
-  #"msg/BoundingBox.msg"
-  #"msg/PixelCoord.msg"
+  "msg/FaceRecognition.msg"
 )
 
 set(srv_files

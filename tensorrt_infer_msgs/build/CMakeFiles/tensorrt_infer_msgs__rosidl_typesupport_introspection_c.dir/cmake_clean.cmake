@@ -1,8 +1,12 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/tensorrt_infer_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tensorrt_infer_msgs/msg/detail/face_recognition__type_support.c.o"
+  "CMakeFiles/tensorrt_infer_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tensorrt_infer_msgs/msg/detail/face_recognition__type_support.c.o.d"
   "CMakeFiles/tensorrt_infer_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tensorrt_infer_msgs/srv/detail/detect_licence_plate__type_support.c.o"
   "CMakeFiles/tensorrt_infer_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tensorrt_infer_msgs/srv/detail/detect_licence_plate__type_support.c.o.d"
   "libtensorrt_infer_msgs__rosidl_typesupport_introspection_c.pdb"
   "libtensorrt_infer_msgs__rosidl_typesupport_introspection_c.so"
+  "rosidl_typesupport_introspection_c/tensorrt_infer_msgs/msg/detail/face_recognition__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/tensorrt_infer_msgs/msg/detail/face_recognition__type_support.c"
   "rosidl_typesupport_introspection_c/tensorrt_infer_msgs/srv/detail/detect_licence_plate__rosidl_typesupport_introspection_c.h"
   "rosidl_typesupport_introspection_c/tensorrt_infer_msgs/srv/detail/detect_licence_plate__type_support.c"
 )

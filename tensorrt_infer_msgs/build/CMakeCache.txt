@@ -274,7 +274,7 @@ DPKG_CMD:FILEPATH=/usr/bin/dpkg
 LSB_RELEASE_CMD:FILEPATH=/usr/bin/lsb_release
 
 //Path to a program.
-PYTHON_EXECUTABLE:FILEPATH=/home/neura_ai/neura/perception_ws/venv/bin/python3
+PYTHON_EXECUTABLE:FILEPATH=/usr/bin/python3
 
 //Path to a file.
 PYTHON_INCLUDE_DIR:PATH=/usr/include/python3.10
@@ -286,7 +286,7 @@ PYTHON_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpython3.10.so
 PYTHON_LIBRARY_DEBUG:FILEPATH=PYTHON_LIBRARY_DEBUG-NOTFOUND
 
 //Path to a program.
-Python3_EXECUTABLE:FILEPATH=/home/neura_ai/neura/perception_ws/venv/bin/python3
+Python3_EXECUTABLE:FILEPATH=/usr/bin/python3
 
 //Name of the computer/site where compile is being run
 SITE:STRING=ai-pc
@@ -295,7 +295,7 @@ SITE:STRING=ai-pc
 _lib:FILEPATH=/opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_fastrtps_cpp.so
 
 //Path to a file.
-_numpy_h:FILEPATH=_numpy_h-NOTFOUND
+_numpy_h:FILEPATH=/usr/include/numpy/numpyconfig.h
 
 //The directory containing a CMake configuration file for ament_cmake.
 ament_cmake_DIR:PATH=/opt/ros/humble/share/ament_cmake/cmake
@@ -669,11 +669,11 @@ CPACK_SOURCE_ZIP-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: DPKG_CMD
 DPKG_CMD-ADVANCED:INTERNAL=1
 //Details about finding Python3
-FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[/home/neura_ai/neura/perception_ws/venv/bin/python3][cfound components: Interpreter ][v3.10.12()]
+FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[/usr/bin/python3][cfound components: Interpreter ][v3.10.12()]
 //Details about finding PythonExtra
 FIND_PACKAGE_MESSAGE_DETAILS_PythonExtra:INTERNAL=[.so][/usr/include/python3.10][/usr/lib/x86_64-linux-gnu/libpython3.10.so][cpython-310-x86_64-linux-gnu][.cpython-310-x86_64-linux-gnu][v()]
 //Details about finding PythonInterp
-FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[/home/neura_ai/neura/perception_ws/venv/bin/python3][v3.10.12(3.6)]
+FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[/usr/bin/python3][v3.10.12(3.6)]
 //Details about finding PythonLibs
 FIND_PACKAGE_MESSAGE_DETAILS_PythonLibs:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpython3.10.so][/usr/include/python3.10][v3.10.12(3.5)]
 //ADVANCED property for variable: LSB_RELEASE_CMD
@@ -684,7 +684,7 @@ PYTHON_EXECUTABLE-ADVANCED:INTERNAL=1
 PYTHON_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //The directory for Python library installation. This needs to
 // be in PYTHONPATH when 'setup.py install' is called.
-PYTHON_INSTALL_DIR:INTERNAL=lib/python3.10/site-packages
+PYTHON_INSTALL_DIR:INTERNAL=local/lib/python3.10/dist-packages
 //ADVANCED property for variable: PYTHON_LIBRARY
 PYTHON_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PYTHON_LIBRARY_DEBUG
@@ -700,10 +700,10 @@ _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 _Python3_Compiler_REASON_FAILURE:INTERNAL=
 //Development reason failure
 _Python3_Development_REASON_FAILURE:INTERNAL=
-_Python3_EXECUTABLE:INTERNAL=/home/neura_ai/neura/perception_ws/venv/bin/python3
+_Python3_EXECUTABLE:INTERNAL=/usr/bin/python3
 //Python3 Properties
-_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;10;12;64;32;<none>;cpython-310-x86_64-linux-gnu;abi3;/usr/lib/python3.10;/home/neura_ai/neura/perception_ws/venv/lib/python3.10;/home/neura_ai/neura/perception_ws/venv/lib/python3.10/site-packages;/home/neura_ai/neura/perception_ws/venv/lib/python3.10/site-packages
-_Python3_INTERPRETER_SIGNATURE:INTERNAL=1253e028d0753bef840360e183dbfa5b
+_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;10;12;64;32;<none>;cpython-310-x86_64-linux-gnu;abi3;/usr/lib/python3.10;/usr/lib/python3.10;/usr/local/lib/python3.10/dist-packages;/usr/local/lib/python3.10/dist-packages
+_Python3_INTERPRETER_SIGNATURE:INTERNAL=0f3e53742e142b1d9e50e4ca5b901dd8
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 

@@ -155,7 +155,7 @@ namespace tensorrt_infer_core
                      plates.end());
         // if (!plates.empty())
         //{
-        cv::Mat img_result = ocr_->drawBBoxLabels(rgb, plates, 1);
+        cv::Mat img_result = tensorrt_inference::drawBBoxLabels(rgb, plates, 1);
         // Draw the bounding boxes on the image
         cv::cvtColor(img_result, img_result, cv::COLOR_RGB2BGR);
         res_pub_->publish(*tensorrt_infer_core::openCVToRos(img_result));

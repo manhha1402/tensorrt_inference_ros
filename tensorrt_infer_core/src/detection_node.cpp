@@ -53,6 +53,10 @@ namespace tensorrt_infer_core
         rgbd_sub_ = this->create_subscription<realsense2_camera_msgs::msg::RGBD>(
             "/camera/camera/rgbd", 10,
             std::bind(&DetectionNode::detect_rgbd_callback, this, _1));
+
+        rgb_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+            "/ros2_ipcamera/composition/image_raw", 10,
+            std::bind(&DetectionNode::detect_rgb_callback, this, _1));
     }
 
     bool DetectionNode::initModel(const std::string &model_name)
@@ -88,6 +92,23 @@ namespace tensorrt_infer_core
     {
         cv::Mat rgb;
         tensorrt_infer_core::rosToOpenCV(rgbd_msg->rgb, rgb);
+        if (rgb.empty() && detector_ == nullptr)
+        {
+            return;
+        }
+        // Run inference
+        const auto objects = detector_->detect(rgb, params_.detect_params, params_.detected_class);
+        // Draw the bounding boxes on the image
+        cv::Mat result = detector_->drawObjectLabels(rgb, objects, params_.detect_params);
+        cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
+        res_pub_->publish(*tensorrt_infer_core::openCVToRos(result));
+    }
+
+    void DetectionNode::detect_rgb_callback(
+        const sensor_msgs::msg::Image::SharedPtr rgb_msg) const
+    {
+        cv::Mat rgb;
+        tensorrt_infer_core::rosToOpenCV(*rgb_msg, rgb);
         if (rgb.empty() && detector_ == nullptr)
         {
             return;

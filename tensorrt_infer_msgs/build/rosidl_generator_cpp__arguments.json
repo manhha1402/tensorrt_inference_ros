@@ -3,6 +3,7 @@
   "output_dir": "/home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/build/rosidl_generator_cpp/tensorrt_infer_msgs",
   "template_dir": "/opt/ros/humble/share/rosidl_generator_cpp/cmake/../resource",
   "idl_tuples": [
+    "/home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/build/rosidl_adapter/tensorrt_infer_msgs:msg/FaceRecognition.idl",
     "/home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/build/rosidl_adapter/tensorrt_infer_msgs:srv/DetectLicencePlate.idl"
   ],
   "ros_interface_dependencies": [
@@ -85,6 +86,7 @@
     "/opt/ros/humble/share/rosidl_generator_cpp/cmake/../resource/srv__builder.hpp.em",
     "/opt/ros/humble/share/rosidl_generator_cpp/cmake/../resource/srv__struct.hpp.em",
     "/opt/ros/humble/share/rosidl_generator_cpp/cmake/../resource/srv__traits.hpp.em",
+    "/home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/build/rosidl_adapter/tensorrt_infer_msgs/msg/FaceRecognition.idl",
     "/home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs/build/rosidl_adapter/tensorrt_infer_msgs/srv/DetectLicencePlate.idl",
     "/opt/ros/humble/share/std_msgs/msg/Bool.idl",
     "/opt/ros/humble/share/std_msgs/msg/Byte.idl",
