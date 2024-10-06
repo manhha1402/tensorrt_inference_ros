@@ -1,4 +1,0 @@
-source;share/tensorrt_infer_msgs/local_setup.bash
-source;share/tensorrt_infer_msgs/local_setup.dsv
-source;share/tensorrt_infer_msgs/local_setup.sh
-source;share/tensorrt_infer_msgs/local_setup.zsh
