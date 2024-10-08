@@ -92,7 +92,7 @@ add_library(${PROJECT_NAME}_lib SHARED
     src/mongodb_client.cpp
     src/licence_plate_detector.cpp
     src/detection_node.cpp
-    src/face_recognition_node.cpp
+    src/face_recognizer.cpp
     )
 if(NOT DEFINED ENV{ROS_DISTRO})
   message(FATAL_ERROR "ROS_DISTRO is not defined." )
@@ -120,13 +120,16 @@ target_link_libraries(${PROJECT_NAME}_lib
                       ${YAML_CPP_LIBRARIES} 
                       fmt
                       ${LIBMONGOCXX_LIBRARIES}
+                      similarity
                       )
 
 # Mark executables and/or libraries for installation 
 add_executable(tensorrt_inference_node nodes/tensorrt_inference_node.cpp)
-target_link_libraries(tensorrt_inference_node ${PROJECT_NAME}_lib similarity)
+target_link_libraries(tensorrt_inference_node ${PROJECT_NAME}_lib)
 add_executable(license_plate_detector_node nodes/license_plate_detector_node.cpp)
 target_link_libraries(license_plate_detector_node ${PROJECT_NAME}_lib)
+add_executable(face_recognition_node nodes/face_recognition_node.cpp)
+target_link_libraries(face_recognition_node ${PROJECT_NAME}_lib)
 ###########
 # INSTALL #
 ###########
@@ -139,7 +142,7 @@ install(
 
 # Install the library target.
 install(
-  TARGETS ${PROJECT_NAME}_lib
+  TARGETS ${PROJECT_NAME}_lib similarity
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -147,7 +150,7 @@ install(
   INCLUDES DESTINATION include
 )
 
-install(TARGETS tensorrt_inference_node license_plate_detector_node
+install(TARGETS tensorrt_inference_node license_plate_detector_node face_recognition_node
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -7,16 +7,16 @@
 #include <realsense2_camera_msgs/msg/rgbd.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <yaml-cpp/yaml.h>
-#include <mongocxx/client.hpp>
-#include <mongocxx/instance.hpp>
 #include <tensorrt_infer_msgs/msg/face_recognition.hpp>
+#include <tensorrt_infer_core/mongodb_client.hpp>
+#include <tensorrt_infer_core/similarity.hpp>
 namespace tensorrt_infer_core
 {
-    class FaceRecognitionNode : public rclcpp::Node
+    class FaceRecognizer : public rclcpp::Node
     {
     public:
-        FaceRecognitionNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions(),
-                            const std::string node_name = "face_recognition_node");
+        FaceRecognizer(const rclcpp::NodeOptions &options = rclcpp::NodeOptions(),
+                       const std::string node_name = "face_recognition_node");
         void
         detect_rgbd_callback(const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const;
         // void
@@ -35,18 +35,15 @@ namespace tensorrt_infer_core
         std::shared_ptr<tensorrt_inference::FaceRecognition> recognizer_;
 
         tensorrt_inference::DetectionParams params_;
+        float rec_thres_ = 0.7;
         std::string camera_topic_ = "/ros2_ipcamera/composition/image_raw";
 
     private:
         bool initModel();
-        bool readFaceDatabase(const std::string &collection_id);
-        Eigen::MatrixXd face_database_;
-        /* data */
-        std::string database_path_;
-        std::string db_name_;
-
-        mongocxx::client mongo_client_;
-        mongocxx::instance mongo_instance_{};
+        std::shared_ptr<MongoDBClient> mongodb_client_ptr_;
+        std::map<std::string, std::vector<std::vector<double>>> embeddings_map_;
+        int rec_width_;
+        int rect_height_;
     };
 
 } // namespace tensorrt_infer_core

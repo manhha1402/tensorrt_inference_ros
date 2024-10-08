@@ -50,3 +50,26 @@ license_plate_detector_node: #executable
       value: '/ros2_ipcamera/composition/image_raw'
       type: 'string'
       description: 'Camera topic'
+
+face_recognition_node: #executable 
+  ros__parameters:
+    obj_thres: 
+      value: 0.6
+      type: 'double'
+      description: 'object detection threshold'
+    nms_thres: 
+      value: 0.6
+      type: 'double'
+      description: 'Non Maximum Suppression Threshold'
+    rec_thres: 
+      value: 0.7
+      type: 'double'
+      description: 'Recognition score'
+    num_detect: 
+      value: 20
+      type: 'int'
+      description: 'Number of detection'
+    camera_topic:
+      value: '/ros2_ipcamera/composition/image_raw'
+      type: 'string'
+      description: 'Camera topic'

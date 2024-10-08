@@ -3,7 +3,7 @@ namespace tensorrt_infer_core
 {
     MongoDBClient::MongoDBClient(const std::string &url_path)
     {
-        if (init(url_path))
+        if (!init(url_path))
         {
             throw std::runtime_error("Mongo client can not be initialized");
         }
@@ -24,9 +24,9 @@ namespace tensorrt_infer_core
     }
     std::map<std::string, std::vector<std::vector<double>>> MongoDBClient::getEmbeddings(const std::string &db_name)
     {
-        mongocxx::instance mongo_instance_{};
         mongocxx::database db = mongo_client_[db_name];
         std::map<std::string, std::vector<std::vector<double>>> embeddings_map;
+        // Get all names
         std::vector<std::string> collection_names = db.list_collection_names();
         for (const auto &collection_name : collection_names)
         {

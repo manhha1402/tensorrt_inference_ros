@@ -1,16 +1,34 @@
-#include <yaml-cpp/yaml.h>
-
 #include <memory>
-#include <tensorrt_infer_core/face_recognition_node.hpp>
-#include <bsoncxx/json.hpp>
-#include <mongocxx/stdx.hpp>
-#include <mongocxx/uri.hpp>
-using std::placeholders::_1;
+#include <tensorrt_infer_core/face_recognizer.hpp>
 
+using std::placeholders::_1;
+namespace
+{
+    void normalize_vector(const std::vector<float> &vec, std::vector<double> &embedding)
+    {
+        // Step 1: Calculate the magnitude (L2 norm)
+        float magnitude = 0.0f;
+        for (const float &val : vec)
+        {
+            magnitude += val * val;
+        }
+        magnitude = std::sqrt(magnitude);
+
+        // Step 2: Normalize each element by dividing by the magnitude
+        if (magnitude > 0)
+        {
+            for (size_t i = 0; i < vec.size(); i++)
+            {
+                double norm = vec[i] / magnitude;
+                embedding[i] = norm;
+            }
+        }
+    }
+}
 namespace tensorrt_infer_core
 {
-    FaceRecognitionNode::FaceRecognitionNode(const rclcpp::NodeOptions &options,
-                                             const std::string node_name)
+    FaceRecognizer::FaceRecognizer(const rclcpp::NodeOptions &options,
+                                   const std::string node_name)
         : Node(node_name, options)
     {
         // Declare parameters
@@ -23,6 +41,9 @@ namespace tensorrt_infer_core
         dynamic_params_->setParam<float>(
             "nms_thres", params_.nms_threshold, [this](const rclcpp::Parameter &parameter)
             { params_.nms_threshold = parameter.get_value<float>(); });
+        dynamic_params_->setParam<float>(
+            "rec_thres", rec_thres_, [this](const rclcpp::Parameter &parameter)
+            { rec_thres_ = parameter.get_value<float>(); });
 
         dynamic_params_->setParam<int>(
             "num_detect", params_.num_detect, [this](const rclcpp::Parameter &parameter)
@@ -30,50 +51,32 @@ namespace tensorrt_infer_core
         dynamic_params_->setParam<std::string>(
             "camera_topic", camera_topic_, [this](const rclcpp::Parameter &parameter)
             { camera_topic_ = parameter.get_value<std::string>(); });
-        const std::string collection_id = "face";
-        if (!readFaceDatabase(collection_id))
-        {
-            throw std::runtime_error("Initilization failed");
-        }
+        bool ret = initModel();
         res_pub_ = create_publisher<sensor_msgs::msg::Image>("face_recognition_image", 10);
         face_info_pub_ = create_publisher<tensorrt_infer_msgs::msg::FaceRecognition>("face_info", 10);
         rgbd_sub_ = this->create_subscription<realsense2_camera_msgs::msg::RGBD>(
             "/camera/camera/rgbd", 10,
-            std::bind(&FaceRecognitionNode::detect_rgbd_callback, this, _1));
+            std::bind(&FaceRecognizer::detect_rgbd_callback, this, _1));
 
         // rgb_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
         //     camera_topic_.c_str(), 10,
-        //     std::bind(&FaceRecognitionNode::detect_rgb_callback, this, _1));
+        //     std::bind(&FaceRecognizer::detect_rgb_callback, this, _1));
     }
 
-    bool FaceRecognitionNode::readFaceDatabase(const std::string &collection_id)
+    bool FaceRecognizer::initModel()
     {
 
         detector_ = std::make_shared<tensorrt_inference::RetinaFace>("facedetector");
         recognizer_ = std::make_shared<tensorrt_inference::FaceRecognition>("FaceNet_vggface2_optmized");
-        mongocxx::database db = mongo_client_[db_name_];
-        mongocxx::collection collection = db[collection_id];
-        // get all documents in collection
-        auto cursor_all = collection.find({});
+        mongodb_client_ptr_ = std::make_shared<MongoDBClient>();
+        embeddings_map_ = mongodb_client_ptr_->getEmbeddings("FaceRecognition");
+        rect_height_ = recognizer_->m_trtEngine->getInputInfo().begin()->second.dims.d[2];
+        rec_width_ = recognizer_->m_trtEngine->getInputInfo().begin()->second.dims.d[3];
 
-        // build json string array with all documents
-        std::string tools_array_str = "[";
-        bool first_document = true;
-        for (auto doc : cursor_all)
-        {
-            if (!first_document)
-            {
-                tools_array_str += ",";
-            }
-            // std::cout << bsoncxx::to_json(doc, bsoncxx::ExtendedJsonMode::k_relaxed) << std::endl;
-            tools_array_str += std::string(bsoncxx::to_json(doc, bsoncxx::ExtendedJsonMode::k_relaxed));
-            first_document = false;
-        }
-        tools_array_str += "]";
         return true;
     }
 
-    void FaceRecognitionNode::detect_rgbd_callback(
+    void FaceRecognizer::detect_rgbd_callback(
         const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const
     {
         cv::Mat rgb;
@@ -83,14 +86,30 @@ namespace tensorrt_infer_core
             return;
         }
         // Run inference
-        const auto objects = detector_->detect(rgb, params_);
+        const auto faces = detector_->detect(rgb, params_);
+        auto cropped_faces =
+            tensorrt_inference::getCroppedObjects(rgb, faces, rec_width_, rect_height_, false);
+
+        for (size_t i = 0; i < cropped_faces.size(); i++)
+        {
+            std::unordered_map<std::string, std::vector<float>> feature_vectors;
+            cv::cuda::GpuMat gpu_input(cropped_faces[i].croped_object);
+            bool ret = recognizer_->doInference(gpu_input, feature_vectors);
+            std::vector<double> embedding(feature_vectors.begin()->second.size());
+            normalize_vector(feature_vectors.begin()->second, embedding);
+            auto result = tensorrt_infer_core::findSimilaritywithName(embeddings_map_, embedding);
+            if (std::get<0>(result) > rec_thres_)
+            {
+                cropped_faces[i].label = std::get<1>(result);
+            }
+        }
+        cv::Mat result = tensorrt_inference::drawBBoxLabels(rgb, cropped_faces, 2);
         // Draw the bounding boxes on the image
-        cv::Mat result = detector_->drawObjectLabels(rgb, objects, params_);
         cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
         res_pub_->publish(*tensorrt_infer_core::openCVToRos(result));
     }
 
-    // void FaceRecognitionNode::detect_rgb_callback(
+    // void FaceRecognizer::detect_rgb_callback(
     //     const sensor_msgs::msg::Image::SharedPtr rgb_msg) const
     // {
     //     cv::Mat rgb;
