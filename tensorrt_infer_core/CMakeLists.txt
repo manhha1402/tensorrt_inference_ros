@@ -56,7 +56,8 @@ find_package(tensorrt_inference REQUIRED)
 set(Eigen3_INCLUDE_DIRS /usr/include/eigen3)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED NO_MODULE PATHS /usr/local NO_DEFAULT_PATH)
-set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda)
+
+include("${CMAKE_SOURCE_DIR}/cmake/find_cuda.cmake")
 find_package(CUDA REQUIRED)
 find_package(fmt REQUIRED)
 find_package(yaml-cpp)
@@ -72,11 +73,23 @@ include_directories("/usr/local/include/bsoncxx/v_noabi")
 
 ###Open3D############
 #find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
+cuda_add_library(similarity SHARED
+  src/similarity.cu
+)
+set_target_properties(similarity PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
+target_include_directories(similarity PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+  ${CUDA_INCLUDE_DIRS}
+  PRIVATE ${CMAKE_CURRENT_BINARY_DIR}  # for private headers generated during build
+  )
+target_link_libraries(similarity ${CUDA_LIBRARIES} )
 add_library(${PROJECT_NAME}_lib SHARED
     src/conversions.cpp
     src/dynamic_params.cpp
     src/ros_param_backend.cpp
+    src/mongodb_client.cpp
     src/licence_plate_detector.cpp
     src/detection_node.cpp
     src/face_recognition_node.cpp
@@ -111,10 +124,9 @@ target_link_libraries(${PROJECT_NAME}_lib
 
 # Mark executables and/or libraries for installation 
 add_executable(tensorrt_inference_node nodes/tensorrt_inference_node.cpp)
-target_link_libraries(tensorrt_inference_node ${PROJECT_NAME}_lib)
+target_link_libraries(tensorrt_inference_node ${PROJECT_NAME}_lib similarity)
 add_executable(license_plate_detector_node nodes/license_plate_detector_node.cpp)
 target_link_libraries(license_plate_detector_node ${PROJECT_NAME}_lib)
-
 ###########
 # INSTALL #
 ###########
