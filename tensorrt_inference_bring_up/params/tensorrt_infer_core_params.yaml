@@ -62,7 +62,7 @@ face_recognition_node: #executable
       type: 'double'
       description: 'Non Maximum Suppression Threshold'
     rec_thres: 
-      value: 0.7
+      value: 0.6
       type: 'double'
       description: 'Recognition score'
     num_detect: 

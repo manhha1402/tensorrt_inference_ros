@@ -97,13 +97,14 @@ namespace tensorrt_infer_core
             bool ret = recognizer_->doInference(gpu_input, feature_vectors);
             std::vector<double> embedding(feature_vectors.begin()->second.size());
             normalize_vector(feature_vectors.begin()->second, embedding);
-            auto result = tensorrt_infer_core::findSimilaritywithName(embeddings_map_, embedding);
+            auto result = tensorrt_infer_core::findSimilaritywithName(embeddings_map_, embedding, "cosine");
             if (std::get<0>(result) > rec_thres_)
             {
                 cropped_faces[i].label = std::get<1>(result);
+                cropped_faces[i].rec_score = std::get<0>(result);
             }
         }
-        cv::Mat result = tensorrt_inference::drawBBoxLabels(rgb, cropped_faces, 2);
+        cv::Mat result = tensorrt_inference::drawBBoxLabels(rgb, cropped_faces, 2, true);
         // Draw the bounding boxes on the image
         cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
         res_pub_->publish(*tensorrt_infer_core::openCVToRos(result));
