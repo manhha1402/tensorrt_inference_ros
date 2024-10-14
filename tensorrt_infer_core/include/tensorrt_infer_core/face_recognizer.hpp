@@ -35,7 +35,9 @@ namespace tensorrt_infer_core
         std::shared_ptr<tensorrt_inference::FaceRecognition> recognizer_;
 
         tensorrt_inference::DetectionParams params_;
-        float rec_thres_ = 0.7;
+        float rec_cosine_thres_ = 0.7;
+        float rec_l2_thres_ = 1.0;
+        std::string distance_metric_ = "cosine"; // euclidean
         std::string camera_topic_ = "/ros2_ipcamera/composition/image_raw";
 
     private:

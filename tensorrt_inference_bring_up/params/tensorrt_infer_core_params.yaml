@@ -61,10 +61,18 @@ face_recognition_node: #executable
       value: 0.6
       type: 'double'
       description: 'Non Maximum Suppression Threshold'
-    rec_thres: 
+    rec_cosine_thres: 
       value: 0.6
       type: 'double'
-      description: 'Recognition score'
+      description: 'Recognition cosine score'
+    rec_l2_thres: 
+      value: 1.0
+      type: 'double'
+      description: 'Recognition euclidean distance score'
+    distance_metric: 
+      value: 'cosine'
+      type: 'string'
+      description: 'Recognition distance metric'  
     num_detect: 
       value: 20
       type: 'int'

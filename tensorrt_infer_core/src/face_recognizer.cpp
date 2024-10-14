@@ -37,13 +37,20 @@ namespace tensorrt_infer_core
         dynamic_params_->setParam<float>(
             "obj_thres", params_.obj_threshold, [this](const rclcpp::Parameter &parameter)
             { params_.obj_threshold = parameter.get_value<float>(); });
-
         dynamic_params_->setParam<float>(
             "nms_thres", params_.nms_threshold, [this](const rclcpp::Parameter &parameter)
             { params_.nms_threshold = parameter.get_value<float>(); });
+        dynamic_params_->setParam<std::string>(
+            "distance_metric", distance_metric_, [this](const rclcpp::Parameter &parameter)
+            { distance_metric_ = parameter.get_value<std::string>(); });
+
         dynamic_params_->setParam<float>(
-            "rec_thres", rec_thres_, [this](const rclcpp::Parameter &parameter)
-            { rec_thres_ = parameter.get_value<float>(); });
+            "rec_cosine_thres", rec_cosine_thres_, [this](const rclcpp::Parameter &parameter)
+            { rec_cosine_thres_ = parameter.get_value<float>(); });
+
+        dynamic_params_->setParam<float>(
+            "rec_l2_thres", rec_l2_thres_, [this](const rclcpp::Parameter &parameter)
+            { rec_l2_thres_ = parameter.get_value<float>(); });
 
         dynamic_params_->setParam<int>(
             "num_detect", params_.num_detect, [this](const rclcpp::Parameter &parameter)
@@ -97,11 +104,22 @@ namespace tensorrt_infer_core
             bool ret = recognizer_->doInference(gpu_input, feature_vectors);
             std::vector<double> embedding(feature_vectors.begin()->second.size());
             normalize_vector(feature_vectors.begin()->second, embedding);
-            auto result = tensorrt_infer_core::findSimilaritywithName(embeddings_map_, embedding, "cosine");
-            if (std::get<0>(result) > rec_thres_)
+            auto result = tensorrt_infer_core::findSimilaritywithName(embeddings_map_, embedding, distance_metric_);
+            if (distance_metric_ == "cosine")
             {
-                cropped_faces[i].label = std::get<1>(result);
-                cropped_faces[i].rec_score = std::get<0>(result);
+                if (std::get<0>(result) > rec_cosine_thres_)
+                {
+                    cropped_faces[i].label = std::get<1>(result);
+                    cropped_faces[i].rec_score = std::get<0>(result);
+                }
+            }
+            else if (distance_metric_ == "euclidean")
+            {
+                if (std::get<0>(result) < rec_l2_thres_)
+                {
+                    cropped_faces[i].label = std::get<1>(result);
+                    cropped_faces[i].rec_score = std::get<0>(result);
+                }
             }
         }
         cv::Mat result = tensorrt_inference::drawBBoxLabels(rgb, cropped_faces, 2, true);
