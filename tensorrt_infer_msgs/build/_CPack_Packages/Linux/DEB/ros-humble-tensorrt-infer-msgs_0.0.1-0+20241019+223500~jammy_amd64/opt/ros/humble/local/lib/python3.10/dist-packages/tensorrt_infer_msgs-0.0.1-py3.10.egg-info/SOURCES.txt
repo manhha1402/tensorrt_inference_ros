@@ -1,0 +1,10 @@
+setup.py
+tensorrt_infer_msgs/__init__.py
+tensorrt_infer_msgs.egg-info/PKG-INFO
+tensorrt_infer_msgs.egg-info/SOURCES.txt
+tensorrt_infer_msgs.egg-info/dependency_links.txt
+tensorrt_infer_msgs.egg-info/top_level.txt
+tensorrt_infer_msgs/msg/__init__.py
+tensorrt_infer_msgs/msg/_face_recognition.py
+tensorrt_infer_msgs/srv/__init__.py
+tensorrt_infer_msgs/srv/_detect_licence_plate.py

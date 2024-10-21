@@ -71,8 +71,27 @@ endif ()
 include_directories("/usr/local/include/mongocxx/v_noabi")
 include_directories("/usr/local/include/bsoncxx/v_noabi")
 
-###Open3D############
-#find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
+###grpc############
+# Find the Protobuf and gRPC packages
+find_package(Protobuf CONFIG REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+file(GLOB_RECURSE gRPC_CPP_FILES "${CMAKE_SOURCE_DIR}/gen/*.c" "${CMAKE_SOURCE_DIR}/gen/*.cc")
+
+add_library(rgpc_lib SHARED  ${gRPC_CPP_FILES})
+include_directories(
+${CMAKE_SOURCE_DIR}/gen
+${Protobuf_INCLUDE_DIRS}
+${gRPC_INCLUDE_DIRS}
+)
+
+# Link the gRPC and Protobuf libraries to your executable
+target_link_libraries(rgpc_lib
+  gRPC::grpc++
+  protobuf::libprotobuf
+)
+
+
+
 cuda_add_library(similarity SHARED
   src/similarity.cu
 )
@@ -123,6 +142,8 @@ target_link_libraries(${PROJECT_NAME}_lib
                       similarity
                       )
 
+
+
 # Mark executables and/or libraries for installation 
 add_executable(tensorrt_inference_node nodes/tensorrt_inference_node.cpp)
 target_link_libraries(tensorrt_inference_node ${PROJECT_NAME}_lib)
@@ -138,11 +159,16 @@ install(
   DIRECTORY include/
   DESTINATION include
 )
+install(DIRECTORY gen/
+	DESTINATION include
+	FILES_MATCHING PATTERN "*.h"
+	PATTERN ".svn" EXCLUDE
+)
 
 
 # Install the library target.
 install(
-  TARGETS ${PROJECT_NAME}_lib similarity
+  TARGETS ${PROJECT_NAME}_lib similarity rgpc_lib
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

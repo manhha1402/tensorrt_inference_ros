@@ -1,0 +1,21 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from tensorrt_infer_msgs/msg/FaceRecognition.msg
+// generated code does not contain a copyright notice
+
+#include "sensor_msgs/msg/Image.idl"
+
+module tensorrt_infer_msgs {
+  module msg {
+    struct FaceRecognition {
+      sequence<string> user_ids;
+
+      uint16 camera_id;
+
+      string timestamp;
+
+      sequence<double> rec_scores;
+
+      sequence<sensor_msgs::msg::Image> cropped_faces;
+    };
+  };
+};

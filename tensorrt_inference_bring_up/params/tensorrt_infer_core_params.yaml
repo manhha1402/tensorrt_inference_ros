@@ -1,83 +1,83 @@
-tensorrt_inference_node: #executable 
+tensorrt_inference_node: #executable
   ros__parameters:
-    obj_thres: 
+    obj_thres:
       value: 0.6
-      type: 'double'
-      description: 'object detection threshold'
-    nms_thres: 
+      type: "double"
+      description: "object detection threshold"
+    nms_thres:
       value: 0.6
-      type: 'double'
-      description: 'Non Maximum Suppression Threshold'
-    seg_thres: 
+      type: "double"
+      description: "Non Maximum Suppression Threshold"
+    seg_thres:
       value: 0.6
-      type: 'double'
-      description: 'Segmentation Threshold'
-    kps_thresh: 
+      type: "double"
+      description: "Segmentation Threshold"
+    kps_thresh:
       value: 0.4112
-      type: 'double'
-      description: 'Key Point Threshold'
-    num_detect: 
+      type: "double"
+      description: "Key Point Threshold"
+    num_detect:
       value: 20
-      type: 'int'
-      description: 'Number of detection'
-    detected_class: 
+      type: "int"
+      description: "Number of detection"
+    detected_class:
       value: ["all"]
-      type: 'string_array'
-      description: 'Detected class'
-    model_name: 
-      value: 'yolov8x-pose'
-      type: 'string'
-      description: 'Deep Learning Model Name'
-license_plate_detector_node: #executable 
+      type: "string_array"
+      description: "Detected class"
+    model_name:
+      value: "yolov8x-pose"
+      type: "string"
+      description: "Deep Learning Model Name"
+license_plate_detector_node: #executable
   ros__parameters:
-    obj_thres: 
+    obj_thres:
       value: 0.6
-      type: 'double'
-      description: 'object detection threshold'
-    nms_thres: 
+      type: "double"
+      description: "object detection threshold"
+    nms_thres:
       value: 0.6
-      type: 'double'
-      description: 'Non Maximum Suppression Threshold'
-    rec_score: 
+      type: "double"
+      description: "Non Maximum Suppression Threshold"
+    rec_score:
       value: 0.8
-      type: 'double'
-      description: 'Recognition score'
-    num_detect: 
+      type: "double"
+      description: "Recognition score"
+    num_detect:
       value: 20
-      type: 'int'
-      description: 'Number of detection'
+      type: "int"
+      description: "Number of detection"
     camera_topic:
-      value: '/ros2_ipcamera/composition/image_raw'
-      type: 'string'
-      description: 'Camera topic'
+      value: "/ros2_ipcamera/composition/image_raw"
+      type: "string"
+      description: "Camera topic"
 
-face_recognition_node: #executable 
+face_recognition_node: #executable
   ros__parameters:
-    obj_thres: 
+    obj_thres:
       value: 0.6
-      type: 'double'
-      description: 'object detection threshold'
-    nms_thres: 
+      type: "double"
+      description: "object detection threshold"
+    nms_thres:
       value: 0.6
-      type: 'double'
-      description: 'Non Maximum Suppression Threshold'
-    rec_cosine_thres: 
+      type: "double"
+      description: "Non Maximum Suppression Threshold"
+    rec_cosine_thres:
       value: 0.6
-      type: 'double'
-      description: 'Recognition cosine score'
-    rec_l2_thres: 
+      type: "double"
+      description: "Recognition cosine score"
+    rec_l2_thres:
       value: 1.0
-      type: 'double'
-      description: 'Recognition euclidean distance score'
-    distance_metric: 
-      value: 'cosine'
-      type: 'string'
-      description: 'Recognition distance metric'  
-    num_detect: 
+      type: "double"
+      description: "Recognition euclidean distance score"
+    distance_metric:
+      value: "euclidean"
+      type: "string"
+      description: "Recognition distance metric: euclidean or cosine"
+    num_detect:
       value: 20
-      type: 'int'
-      description: 'Number of detection'
+      type: "int"
+      description: "Number of detection"
     camera_topic:
-      value: '/ros2_ipcamera/composition/image_raw'
-      type: 'string'
-      description: 'Camera topic'
+      value: "/ros2_ipcamera/composition/image_raw"
+      type: "string"
+      description: "Camera topic"

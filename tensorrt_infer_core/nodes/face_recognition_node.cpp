@@ -1,26 +1,7 @@
 
 #include <tensorrt_infer_core/face_recognizer.hpp>
 #include <rclcpp/rclcpp.hpp>
-void normalize(const std::vector<float> &vec, std::vector<double> &embedding)
-{
-    // Step 1: Calculate the magnitude (L2 norm)
-    float magnitude = 0.0f;
-    for (const float &val : vec)
-    {
-        magnitude += val * val;
-    }
-    magnitude = std::sqrt(magnitude);
 
-    // Step 2: Normalize each element by dividing by the magnitude
-    if (magnitude > 0)
-    {
-        for (size_t i = 0; i < vec.size(); i++)
-        {
-            double norm = vec[i] / magnitude;
-            embedding[i] = norm;
-        }
-    }
-}
 int main(int argc, char **argv)
 {
 

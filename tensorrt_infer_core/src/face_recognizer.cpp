@@ -61,13 +61,13 @@ namespace tensorrt_infer_core
         bool ret = initModel();
         res_pub_ = create_publisher<sensor_msgs::msg::Image>("face_recognition_image", 10);
         face_info_pub_ = create_publisher<tensorrt_infer_msgs::msg::FaceRecognition>("face_info", 10);
-        rgbd_sub_ = this->create_subscription<realsense2_camera_msgs::msg::RGBD>(
-            "/camera/camera/rgbd", 10,
-            std::bind(&FaceRecognizer::detect_rgbd_callback, this, _1));
+        // rgbd_sub_ = this->create_subscription<realsense2_camera_msgs::msg::RGBD>(
+        //     "/camera/camera/rgbd", 10,
+        //     std::bind(&FaceRecognizer::detect_rgbd_callback, this, _1));
 
-        // rgb_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-        //     camera_topic_.c_str(), 10,
-        //     std::bind(&FaceRecognizer::detect_rgb_callback, this, _1));
+        rgb_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+            "/camera/camera/color/image_raw", 10,
+            std::bind(&FaceRecognizer::detect_rgb_callback, this, _1));
     }
 
     bool FaceRecognizer::initModel()
@@ -83,11 +83,56 @@ namespace tensorrt_infer_core
         return true;
     }
 
-    void FaceRecognizer::detect_rgbd_callback(
-        const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const
+    // void FaceRecognizer::detect_rgbd_callback(
+    //     const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const
+    // {
+    //     cv::Mat rgb;
+    //     tensorrt_infer_core::rosToOpenCV(rgbd_msg->rgb, rgb);
+    //     if (rgb.empty() && detector_ == nullptr)
+    //     {
+    //         return;
+    //     }
+    //     // Run inference
+    //     const auto faces = detector_->detect(rgb, params_);
+    //     auto cropped_faces =
+    //         tensorrt_inference::getCroppedObjects(rgb, faces, rec_width_, rect_height_, false);
+
+    //     for (size_t i = 0; i < cropped_faces.size(); i++)
+    //     {
+    //         std::unordered_map<std::string, std::vector<float>> feature_vectors;
+    //         cv::cuda::GpuMat gpu_input(cropped_faces[i].croped_object);
+    //         bool ret = recognizer_->doInference(gpu_input, feature_vectors);
+    //         std::vector<double> embedding(feature_vectors.begin()->second.size());
+    //         normalize_vector(feature_vectors.begin()->second, embedding);
+    //         auto result = tensorrt_infer_core::findSimilaritywithName(embeddings_map_, embedding, distance_metric_);
+    //         if (distance_metric_ == "cosine")
+    //         {
+    //             if (std::get<0>(result) > rec_cosine_thres_)
+    //             {
+    //                 cropped_faces[i].label = std::get<1>(result);
+    //                 cropped_faces[i].rec_score = std::get<0>(result);
+    //             }
+    //         }
+    //         else if (distance_metric_ == "euclidean")
+    //         {
+    //             if (std::get<0>(result) < rec_l2_thres_)
+    //             {
+    //                 cropped_faces[i].label = std::get<1>(result);
+    //                 cropped_faces[i].rec_score = std::get<0>(result);
+    //             }
+    //         }
+    //     }
+    //     cv::Mat result = tensorrt_inference::drawBBoxLabels(rgb, cropped_faces, 2, true);
+    //     // Draw the bounding boxes on the image
+    //     cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
+    //     res_pub_->publish(*tensorrt_infer_core::openCVToRos(result));
+    // }
+
+    void FaceRecognizer::detect_rgb_callback(
+        const sensor_msgs::msg::Image::SharedPtr rgb_msg) const
     {
         cv::Mat rgb;
-        tensorrt_infer_core::rosToOpenCV(rgbd_msg->rgb, rgb);
+        tensorrt_infer_core::rosToOpenCV(*rgb_msg, rgb);
         if (rgb.empty() && detector_ == nullptr)
         {
             return;
@@ -96,7 +141,7 @@ namespace tensorrt_infer_core
         const auto faces = detector_->detect(rgb, params_);
         auto cropped_faces =
             tensorrt_inference::getCroppedObjects(rgb, faces, rec_width_, rect_height_, false);
-
+        tensorrt_infer_msgs::msg::FaceRecognition face_msg;
         for (size_t i = 0; i < cropped_faces.size(); i++)
         {
             std::unordered_map<std::string, std::vector<float>> feature_vectors;
@@ -105,12 +150,16 @@ namespace tensorrt_infer_core
             std::vector<double> embedding(feature_vectors.begin()->second.size());
             normalize_vector(feature_vectors.begin()->second, embedding);
             auto result = tensorrt_infer_core::findSimilaritywithName(embeddings_map_, embedding, distance_metric_);
+
             if (distance_metric_ == "cosine")
             {
                 if (std::get<0>(result) > rec_cosine_thres_)
                 {
                     cropped_faces[i].label = std::get<1>(result);
                     cropped_faces[i].rec_score = std::get<0>(result);
+                    sensor_msgs::msg::Image cropped_face_msg;
+                    face_msg.user_ids.push_back(cropped_faces[i].label);
+                    face_msg.rec_scores.push_back(cropped_faces[i].rec_score);
                 }
             }
             else if (distance_metric_ == "euclidean")
@@ -119,30 +168,22 @@ namespace tensorrt_infer_core
                 {
                     cropped_faces[i].label = std::get<1>(result);
                     cropped_faces[i].rec_score = std::get<0>(result);
+                    face_msg.user_ids.push_back(cropped_faces[i].label);
+                    face_msg.rec_scores.push_back(cropped_faces[i].rec_score);
+                    sensor_msgs::msg::Image cropped_face_msg;
+                    tensorrt_infer_core::openCVToRos(cropped_faces[i].croped_object, cropped_face_msg);
+                    face_msg.cropped_faces.push_back(cropped_face_msg);
                 }
             }
         }
+        auto now = std::chrono::system_clock::now();
+        const std::time_t current_time = std::chrono::system_clock::to_time_t(now);
+        face_msg.timestamp = std::ctime(&current_time);
+        face_info_pub_->publish(face_msg);
         cv::Mat result = tensorrt_inference::drawBBoxLabels(rgb, cropped_faces, 2, true);
         // Draw the bounding boxes on the image
         cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
         res_pub_->publish(*tensorrt_infer_core::openCVToRos(result));
     }
-
-    // void FaceRecognizer::detect_rgb_callback(
-    //     const sensor_msgs::msg::Image::SharedPtr rgb_msg) const
-    // {
-    //     cv::Mat rgb;
-    //     tensorrt_infer_core::rosToOpenCV(*rgb_msg, rgb);
-    //     if (rgb.empty() && detector_ == nullptr)
-    //     {
-    //         return;
-    //     }
-    //     // Run inference
-    //     const auto objects = detector_->detect(rgb, params_);
-    //     // Draw the bounding boxes on the image
-    //     cv::Mat result = detector_->drawObjectLabels(rgb, objects, params_);
-    //     cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
-    //     res_pub_->publish(*tensorrt_infer_core::openCVToRos(result));
-    // }
 
 } // namespace tensorrt_infer_core

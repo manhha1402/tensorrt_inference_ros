@@ -10,6 +10,7 @@
 #include <tensorrt_infer_msgs/msg/face_recognition.hpp>
 #include <tensorrt_infer_core/mongodb_client.hpp>
 #include <tensorrt_infer_core/similarity.hpp>
+#include <tensorrt_infer_msgs/msg/face_recognition.hpp>
 namespace tensorrt_infer_core
 {
     class FaceRecognizer : public rclcpp::Node
@@ -17,14 +18,14 @@ namespace tensorrt_infer_core
     public:
         FaceRecognizer(const rclcpp::NodeOptions &options = rclcpp::NodeOptions(),
                        const std::string node_name = "face_recognition_node");
-        void
-        detect_rgbd_callback(const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const;
         // void
-        // detect_rgb_callback(const sensor_msgs::msg::Image::SharedPtr rgb_msg) const;
+        // detect_rgbd_callback(const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const;
+        void
+        detect_rgb_callback(const sensor_msgs::msg::Image::SharedPtr rgb_msg) const;
 
     private:
         rclcpp::Subscription<realsense2_camera_msgs::msg::RGBD>::SharedPtr rgbd_sub_;
-        // rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr rgb_sub_;
+        rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr rgb_sub_;
 
         std::shared_ptr<tensorrt_infer_core::Parameters> dynamic_params_;
 
@@ -37,7 +38,7 @@ namespace tensorrt_infer_core
         tensorrt_inference::DetectionParams params_;
         float rec_cosine_thres_ = 0.7;
         float rec_l2_thres_ = 1.0;
-        std::string distance_metric_ = "cosine"; // euclidean
+        std::string distance_metric_ = "euclidean"; // euclidean
         std::string camera_topic_ = "/ros2_ipcamera/composition/image_raw";
 
     private:

@@ -1,0 +1,7 @@
+{
+  "package_name": "tensorrt_infer_msgs",
+  "non_idl_tuples": [
+    "/home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs:msg/FaceRecognition.msg",
+    "/home/neura_ai/neura/ros2_ws/src/tensorrt_inference_ros/tensorrt_infer_msgs:srv/DetectLicencePlate.srv"
+  ]
+}

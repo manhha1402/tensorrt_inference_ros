@@ -12,9 +12,9 @@ class ImageReceiverNode(Node):
     def __init__(self) -> None:
         super().__init__('image_receiver_node')
             
-        self.topic_map = {'color' :'/ros2_ipcamera/composition/image_raw',
+        self.topic_map = {'color' :'/camera/camera/color/image_raw',
                          'depth' :'/camera/camera/aligned_depth_to_color/image_raw' ,
-                         'plate' : '/tensorrt_infer_core/licence_plate_result' ,
+                         'plate' : '/tensorrt_infer_core/face_recognition_image' ,
                          'tensorrt' :'/tensorrt_infer_core/tensorrt_result'}
         #create two subscriptions for the two images
         self.color_sub = self.create_subscription(Image, self.topic_map['color'], self.color_callback, 10)
@@ -38,7 +38,7 @@ class ImageReceiverNode(Node):
         return
 
     def color_callback(self, msg) -> None:
-        if self.topic == "/ros2_ipcamera/composition/image_raw":
+        if self.topic == "/camera/camera/color/image_raw":
             #convert the image to a cv::Mat
             image = self.cv_bridge.imgmsg_to_cv2(msg,desired_encoding= "bgr8" )
             #encode the image to base64
@@ -56,7 +56,7 @@ class ImageReceiverNode(Node):
             self.sub_image.set_source(f'data:image/png;base64,{base64_image}')
         return
     def plate_callback(self, msg) -> None:
-        if self.topic == "/tensorrt_infer_core/licence_plate_result":
+        if self.topic == "/tensorrt_infer_core/face_recognition_image":
             #convert the image to a cv::Mat
             image = self.cv_bridge.imgmsg_to_cv2(msg,desired_encoding= "bgr8" )
             #encode the image to base64
