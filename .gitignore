@@ -1,0 +1,5 @@
+.vscode
+.venv
+build
+*.pyc
+*.pytest_cache
