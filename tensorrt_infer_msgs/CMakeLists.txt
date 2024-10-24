@@ -25,10 +25,13 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
+  "msg/Embedding.msg"
+  "msg/FaceInfo.msg"
   "msg/FaceRecognition.msg"
 )
 
 set(srv_files
+  "srv/FaceDatabaseInfo.srv"
   "srv/DetectLicencePlate.srv"
 )
 

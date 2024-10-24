@@ -78,6 +78,6 @@ face_recognition_node: #executable
       type: "int"
       description: "Number of detection"
     camera_topic:
-      value: "/ros2_ipcamera/composition/image_raw"
+      value: "/camera/camera/color/image_raw"
       type: "string"
       description: "Camera topic"

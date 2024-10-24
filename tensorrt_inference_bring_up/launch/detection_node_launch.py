@@ -22,7 +22,6 @@ def generate_launch_description():
         tensorrt_inference_node_params[key] = value['value'] 
     for key, value in license_plate_detector_node_raw_params.items():
         license_plate_detector_node_params[key] = value['value'] 
-    print(3)
 
     tensorrt_inference_node = Node(
         package='tensorrt_infer_core',
