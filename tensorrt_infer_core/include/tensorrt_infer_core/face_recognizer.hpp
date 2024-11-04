@@ -48,7 +48,7 @@ namespace tensorrt_infer_core
 
     private:
         bool initModel();
-        // std::shared_ptr<MongoDBClient> mongodb_client_ptr_;
+        std::shared_ptr<MongoDBClient> mongodb_client_ptr_;
         std::map<std::string, std::vector<std::vector<double>>> embeddings_map_;
         int rec_width_;
         int rect_height_;

@@ -1,6 +1,6 @@
 # general cpack variables
 set(CPACK_PACKAGE_CONTACT "Manh Ha Hoang <manhha1402@gmail.com>")
-set(CPACK_PACKAGE_VENDOR "Pathtech, Vietnaem")
+set(CPACK_PACKAGE_VENDOR "Pathtech, Vietnam")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Pathtech ${PROJECT_NAME} package")
 
 set(PROJECT_VERSION ${PROJECT_VERSION})

@@ -28,7 +28,6 @@ find_package(ament_index_cpp REQUIRED)
 
 # dependencies
 find_package(rclcpp REQUIRED)
-find_package(message_filters REQUIRED)
 find_package(sensor_msgs)
 find_package(tensorrt_infer_msgs)
 find_package(realsense2_camera_msgs)
@@ -37,7 +36,7 @@ find_package(tf2_eigen)
 set(dependencies
   rclcpp
   sensor_msgs
-  message_filters
+
   ament_index_cpp
   realsense2_camera_msgs
   tf2_eigen
@@ -120,7 +119,6 @@ target_link_libraries(${PROJECT_NAME}_lib
                       fmt
                       ${LIBMONGOCXX_LIBRARIES}
                       similarity
-                      
                       )
 
 

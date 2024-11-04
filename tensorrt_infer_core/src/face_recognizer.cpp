@@ -57,7 +57,9 @@ namespace tensorrt_infer_core
             { params_.num_detect = parameter.get_value<int>(); });
         dynamic_params_->setParam<std::string>(
             "camera_topic", camera_topic_, [this](const rclcpp::Parameter &parameter)
-            { camera_topic_ = parameter.get_value<std::string>(); });
+            {
+                camera_topic_ = parameter.get_value<std::string>();
+                rgb_sub_ = this->create_subscription<sensor_msgs::msg::Image>(camera_topic_.c_str(), 10,std::bind(&FaceRecognizer::detect_rgb_callback, this, _1)); });
         bool ret = initModel();
 
         face_info_srv_ = create_service<tensorrt_infer_msgs::srv::FaceDatabaseInfo>("face_embeddings", std::bind(&FaceRecognizer::update_face_embeddings, this,
@@ -68,10 +70,6 @@ namespace tensorrt_infer_core
         // rgbd_sub_ = this->create_subscription<realsense2_camera_msgs::msg::RGBD>(
         //     camera_topic_.c_str(), 10,
         //     std::bind(&FaceRecognizer::detect_rgbd_callback, this, _1));
-
-        rgb_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-            camera_topic_.c_str(), 10,
-            std::bind(&FaceRecognizer::detect_rgb_callback, this, _1));
     }
 
     bool FaceRecognizer::initModel()
@@ -79,7 +77,7 @@ namespace tensorrt_infer_core
 
         detector_ = std::make_shared<tensorrt_inference::RetinaFace>("facedetector");
         recognizer_ = std::make_shared<tensorrt_inference::FaceRecognition>("FaceNet_vggface2_optmized");
-        // mongodb_client_ptr_ = std::make_shared<MongoDBClient>();
+        mongodb_client_ptr_ = std::make_shared<MongoDBClient>();
         // embeddings_map_ = mongodb_client_ptr_->getEmbeddings("FaceRecognition");
         rect_height_ = recognizer_->m_trtEngine->getInputInfo().begin()->second.dims.d[2];
         rec_width_ = recognizer_->m_trtEngine->getInputInfo().begin()->second.dims.d[3];
@@ -201,14 +199,16 @@ namespace tensorrt_infer_core
     {
         RCLCPP_INFO(get_logger(), "Update Face Embedding");
         embeddings_map_.clear();
-        if (request->face_info.empty())
+        if (request->face_infos.empty())
         {
             RCLCPP_WARN(get_logger(), "Face Embedding is empty");
             response->success = false;
             return;
         }
-        for (const auto &face_info : request->face_info)
+        for (const auto &face_info : request->face_infos)
         {
+            if (face_info.embeddings.empty())
+                continue;
             std::vector<std::vector<double>> embeddings;
             for (const auto &embedding : face_info.embeddings)
             {
