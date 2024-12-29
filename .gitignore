@@ -1,0 +1,6 @@
+.vscode
+.venv
+build
+*.pyc
+*.pytest_cache
+COLCON_IGNORE

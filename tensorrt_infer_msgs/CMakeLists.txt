@@ -20,34 +20,30 @@ message( STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}" )
 
 
 find_package(std_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
-  #"msg/ReturnCode.msg"
-  #"msg/BoundingBox.msg"
-  #"msg/PixelCoord.msg"
+  "msg/Embedding.msg"
+  "msg/FaceInfo.msg"
+  "msg/FaceRecognition.msg"
 )
 
 set(srv_files
-  #"srv/SelectModel.srv"
-  #"srv/TrainModel.srv"
-  #"srv/GetModel.srv"
-  #"srv/GetMethod.srv"
-  #"srv/SelectMethod.srv"
+  "srv/FaceDatabaseInfo.srv"
+  "srv/DetectLicencePlate.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${srv_files}
-  DEPENDENCIES rosidl_default_runtime std_msgs geometry_msgs
+  DEPENDENCIES rosidl_default_runtime std_msgs sensor_msgs
   ADD_LINTER_TESTS
 )
 
 
-ament_export_dependencies(rosidl_default_runtime geometry_msgs std_msgs)
+ament_export_dependencies(rosidl_default_runtime sensor_msgs std_msgs)
 ament_package()
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "ros-$ENV{ROS_DISTRO}-std-msgs")
 
 include(cmake/package_debian.cmake)

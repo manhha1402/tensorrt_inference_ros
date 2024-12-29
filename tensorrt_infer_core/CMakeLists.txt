@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.2)
-project(tensorrt_infer_core)
+project(tensorrt_infer_core LANGUAGES CXX CUDA)
 include(cmake/project_version.cmake)
 
 # Save the command line compile commands in the build output
@@ -9,12 +9,21 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+
 # Default to release build
 if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 message( STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}" )
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+# By default we build for the native cuda architecture. Customize by passing
+# '-DCMAKE_CUDA_ARCHITECTURES=89;75;72' to cmake.
+if (DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set(CMAKE_CUDA_ARCHITECTURES_SET_EXTERNALLY TRUE)
+else()
+  set(CMAKE_CUDA_ARCHITECTURES_SET_EXTERNALLY FALSE)
+endif()
+include(cmake/cuda/setup_compute_capability.cmake)
 
 
 
@@ -28,23 +37,19 @@ find_package(ament_index_cpp REQUIRED)
 
 # dependencies
 find_package(rclcpp REQUIRED)
-find_package(message_filters REQUIRED)
 find_package(sensor_msgs)
+find_package(tensorrt_infer_msgs)
 find_package(realsense2_camera_msgs)
 find_package(tf2_eigen)
-find_package(neura_scan_utils)
+
 set(dependencies
   rclcpp
   sensor_msgs
-  message_filters
-  neura_scan_utils
   ament_index_cpp
   realsense2_camera_msgs
   tf2_eigen
+  tensorrt_infer_msgs
 )
-
-
-
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -54,21 +59,46 @@ if (OPENMP_FOUND)
 endif()
 
 find_package(tensorrt_inference REQUIRED)
+find_package(CUDAToolkit REQUIRED)
 
 set(Eigen3_INCLUDE_DIRS /usr/include/eigen3)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED NO_MODULE PATHS /usr/local NO_DEFAULT_PATH)
-set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda)
-find_package(CUDA REQUIRED)
+
+include("${CMAKE_SOURCE_DIR}/cmake/find_cuda.cmake")
 find_package(fmt REQUIRED)
 find_package(yaml-cpp)
 
-###Open3D############
-find_package(Open3D HINTS ${CMAKE_INSTALL_PREFIX}/lib/CMake)
+pkg_check_modules(LIBMONGOCXX  libmongocxx REQUIRED)
+if (${LIBMONGOCXX_FOUND})
+  message("found mongocxx")
+else ()
+  message(WARNING "not found mongocxx")
+endif ()
+include_directories("/usr/local/include/mongocxx/v_noabi")
+include_directories("/usr/local/include/bsoncxx/v_noabi")
+
 
 add_library(${PROJECT_NAME}_lib SHARED
+    src/similarity.cu
+    src/conversions.cpp
+    src/dynamic_params.cpp
+    src/ros_param_backend.cpp
+    src/mongodb_client.cpp
+    src/licence_plate_detector.cpp
     src/detection_node.cpp
+    src/face_recognizer.cpp
     )
+if(NOT DEFINED ENV{ROS_DISTRO})
+  message(FATAL_ERROR "ROS_DISTRO is not defined." )
+endif()
+if("$ENV{ROS_DISTRO}" STREQUAL "foxy")
+  message(STATUS "Build for ROS2 Foxy")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFOXY")
+elseif("$ENV{ROS_DISTRO}" STREQUAL "humble")
+  message(STATUS "Build for ROS2 Humble")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHUMBLE")
+endif()
 target_include_directories(
   ${PROJECT_NAME}_lib PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -82,21 +112,20 @@ target_link_libraries(${PROJECT_NAME}_lib
                       Eigen3::Eigen 
                       ${CUDA_LIBRARIES} 
                       ${OpenCV_LIBRARIES}
-                      ${Open3D_LIBRARIES} 
                       ${YAML_CPP_LIBRARIES} 
                       fmt
+                      ${LIBMONGOCXX_LIBRARIES}
                       )
-
-
-
 
 
 
 # Mark executables and/or libraries for installation 
 add_executable(tensorrt_inference_node nodes/tensorrt_inference_node.cpp)
 target_link_libraries(tensorrt_inference_node ${PROJECT_NAME}_lib)
-
-
+add_executable(license_plate_detector_node nodes/license_plate_detector_node.cpp)
+target_link_libraries(license_plate_detector_node ${PROJECT_NAME}_lib)
+add_executable(face_recognition_node nodes/face_recognition_node.cpp)
+target_link_libraries(face_recognition_node ${PROJECT_NAME}_lib)
 ###########
 # INSTALL #
 ###########
@@ -109,7 +138,7 @@ install(
 
 # Install the library target.
 install(
-  TARGETS ${PROJECT_NAME}_lib
+  TARGETS ${PROJECT_NAME}_lib  
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -117,14 +146,14 @@ install(
   INCLUDES DESTINATION include
 )
 
-install(TARGETS tensorrt_inference_node
+install(TARGETS tensorrt_inference_node license_plate_detector_node face_recognition_node
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
-ament_export_dependencies(${dependencies})
+ament_export_dependencies(${dependencies} CUDAToolkit)
 ament_package()
 
 include(cmake/package_debian.cmake)

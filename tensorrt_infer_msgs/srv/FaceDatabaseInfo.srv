@@ -1,0 +1,4 @@
+tensorrt_infer_msgs/FaceInfo[] face_infos
+---
+bool success
+
