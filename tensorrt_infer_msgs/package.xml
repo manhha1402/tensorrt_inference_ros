@@ -6,7 +6,7 @@
 
   <maintainer email="manhha1402@gmail.com">manhha</maintainer>
 
-  <license>Pathtech</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>

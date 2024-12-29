@@ -1,8 +1,5 @@
 # general cpack variables
 set(CPACK_PACKAGE_CONTACT "Manh Ha Hoang <manhha1402@gmail.com>")
-set(CPACK_PACKAGE_VENDOR "PathTech, Hanoi, Vietnam")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "PathTech ${PROJECT_NAME} package")
-
 if (EXISTS "${PROJECT_SOURCE_DIR}/package.xml")
     file(STRINGS "${PROJECT_SOURCE_DIR}/package.xml" PACKAGE_XML_VERSION_LINE REGEX <version>[0-9.]*</version>)
     string(REGEX REPLACE .*<version>\([0-9.]*\)</version>.* \\1 PACKAGE_XML_VERSION "${PACKAGE_XML_VERSION_LINE}")

@@ -6,7 +6,7 @@
   <description>Bringup scripts and configurations for the tensorrt stack</description>
   <maintainer email="manhha14@gmail.com">Manh-Ha Hoang</maintainer>
 
-  <license>Pathtech </license>
+  <license>MIT </license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>launch_ros</build_depend>
