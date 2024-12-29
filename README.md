@@ -7,7 +7,7 @@ This project integrates TensorRT inference with ROS2 (Robot Operating System). I
 - TensorRT model optimization and inference
 - ROS2 nodes for running inference
 - Example launch files and configurations
-- Support for various deep learning models (YOLO, Retina, VGGFace, OCR, ...)
+- Support for various deep learning models (YOLO, Retinaface, VGGFace, PaddleOCR, ...)
 
 
 ## Contributing
