@@ -70,7 +70,7 @@ face_recognition_node: #executable
       type: "double"
       description: "Recognition euclidean distance score"
     distance_metric:
-      value: "cosine"
+      value: "euclidean"
       type: "string"
       description: "Recognition distance metric: euclidean or cosine"
     num_detect:
@@ -81,3 +81,7 @@ face_recognition_node: #executable
       value: "/camera/camera/color/image_raw"
       type: "string"
       description: "Camera topic"
+    rgbd_topic:
+      value: "/camera/camera/rgbd"
+      type: "string"
+      description: "RGBD topic"

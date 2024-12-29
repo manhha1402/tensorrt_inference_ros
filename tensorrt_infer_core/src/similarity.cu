@@ -1,90 +1,99 @@
 #include <iostream>
 #include <vector>
-#include <cuda_runtime.h>
-#include <cfloat>
 #include <map>
-#include "tensorrt_infer_core/similarity.hpp"
-namespace tensorrt_infer_core
+#include <tuple>
+#include <cmath>
+#include <string>
+#include <limits>
+#include <cuda_runtime.h>
+#include <tensorrt_infer_core/similarity.hpp>
+
+namespace
 {
-    // Custom atomicMax for doubles (since CUDA does not support atomicMax for doubles by default)
-    __device__ double atomicMax_double(double *address, double val)
+    // CUDA helper functions for cosine similarity calculation
+    __device__ double dotProduct(const double *a, const double *b, int size)
     {
-        unsigned long long int *address_as_ull = (unsigned long long int *)address;
-        unsigned long long int old = *address_as_ull, assumed;
-
-        do
+        double dot = 0.0;
+        for (int i = 0; i < size; ++i)
         {
-            assumed = old;
-            old = atomicCAS(address_as_ull, assumed, __double_as_longlong(max(val, __longlong_as_double(assumed))));
-        } while (assumed != old);
-
-        return __longlong_as_double(old);
-    }
-    // Custom atomicMin for double precision
-    __device__ double atomicMin_double(double *address, double val)
-    {
-        unsigned long long int *address_as_ull = (unsigned long long int *)address;
-        unsigned long long int old = *address_as_ull, assumed;
-
-        do
-        {
-            assumed = old;
-            old = atomicCAS(address_as_ull, assumed, __double_as_longlong(fmin(val, __longlong_as_double(assumed))));
-        } while (assumed != old);
-
-        return __longlong_as_double(old);
-    }
-    __global__ void compute_dot_products(const double *vectors, const double *target_vector, double *dot_products, int num_vectors, int vector_size)
-    {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-        if (idx < num_vectors)
-        {
-            double dot_product = 0.0;
-            for (int i = 0; i < vector_size; ++i)
-            {
-                dot_product += vectors[idx * vector_size + i] * target_vector[i];
-            }
-            dot_products[idx] = dot_product;
+            dot += a[i] * b[i];
         }
+        return dot;
     }
-    // CUDA Kernel to find the maximum dot product and its index using atomic operations
-    __global__ void find_max_with_index(double *results, double *max_val, int *max_idx, int num_vectors)
+
+    __device__ double magnitude(const double *vec, int size)
     {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-        // Initialize shared variables (maximum value and index)
-        if (idx < num_vectors)
+        double sum = 0.0;
+        for (int i = 0; i < size; ++i)
         {
-            double result = results[idx];
-            atomicMax_double(max_val, result);
-
-            if (*max_val == result)
-            {
-                *max_idx = idx; // Update index if the current result is the new max
-            }
+            sum += vec[i] * vec[i];
         }
+        return sqrt(sum);
     }
-    // CUDA Kernel to find the maximum dot product, its index, and its key using atomic operations
-    __global__ void find_max_with_key(double *results, double *max_val, int *max_idx, int *max_key, const int *key_indices, int num_vectors)
+
+    __global__ void computeCosineSimilarity(
+        const double *target_vector,
+        const double *data,
+        int vector_size,
+        int total_vectors,
+        double *similarities)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-        if (idx < num_vectors)
+        if (idx < total_vectors)
         {
-            double result = results[idx];
-            atomicMax_double(max_val, result);
-
-            // If we find a new maximum, update the index and the key
-            if (*max_val == result)
-            {
-                *max_idx = idx;
-                *max_key = key_indices[idx];
-            }
+            const double *current_vector = data + idx * vector_size;
+            double dot = dotProduct(target_vector, current_vector, vector_size);
+            double mag_target = magnitude(target_vector, vector_size);
+            double mag_current = magnitude(current_vector, vector_size);
+            similarities[idx] = dot / (mag_target * mag_current + 1e-10); // Avoid division by zero
         }
     }
 
-    // Kernel to compute the Euclidean distance and find the minimum
+    // Kernel for finding max similarity (parallel reduction)
+    __global__ void findMaxSimilarity(
+        const double *similarities,
+        int total_vectors,
+        double *max_similarity,
+        int *max_index)
+    {
+        extern __shared__ double shared_data[]; // Shared memory for block reduction
+        double *shared_similarities = shared_data;
+        int *shared_indices = (int *)&shared_data[blockDim.x];
+
+        int tid = threadIdx.x;
+        int global_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Initialize shared memory with similarities and indices
+        if (global_idx < total_vectors)
+        {
+            shared_similarities[tid] = similarities[global_idx];
+            shared_indices[tid] = global_idx;
+        }
+        else
+        {
+            shared_similarities[tid] = -1e10; // Negative infinity for unused threads
+            shared_indices[tid] = -1;
+        }
+        __syncthreads();
+
+        // Block reduction to find max similarity and its index
+        for (int s = blockDim.x / 2; s > 0; s >>= 1)
+        {
+            if (tid < s && shared_similarities[tid] < shared_similarities[tid + s])
+            {
+                shared_similarities[tid] = shared_similarities[tid + s];
+                shared_indices[tid] = shared_indices[tid + s];
+            }
+            __syncthreads();
+        }
+
+        // Write block's maximum to global memory
+        if (tid == 0)
+        {
+            max_similarity[blockIdx.x] = shared_similarities[0];
+            max_index[blockIdx.x] = shared_indices[0];
+        }
+    }
 
     // CUDA kernel to compute Euclidean distances
     __global__ void computeEuclideanDistance(const double *d_data, const double *d_target, double *d_distances, size_t vector_size, size_t num_vectors)
@@ -101,92 +110,121 @@ namespace tensorrt_infer_core
             d_distances[idx] = sqrt(sum); // Store the Euclidean distance
         }
     }
+}
 
-    ///////////////////////////////
-    std::tuple<double, std::string, int>
-    findSimilaritywithName(
+namespace tensorrt_infer_core
+{
+
+    // Host function to find the best match using CUDA
+    std::tuple<double, std::string, int> findSimilaritywithName(
         const std::map<std::string, std::vector<std::vector<double>>> &data_map,
         const std::vector<double> &target_vector, const std::string &distance_metric)
     {
-
+        cudaError_t err;
+        std::vector<std::string> keys;
+        std::vector<double> flattened_data;
         if (distance_metric == "cosine")
         {
-            int num_vectors = 0;
+
+            // Step 1: Flatten the data_map into a contiguous array and track categories and indices
+            std::vector<int> category_indices;
             int vector_size = target_vector.size();
+            int total_vectors = 0;
 
-            // Prepare a flattened version of the vectors and an array of corresponding keys
-            std::vector<double> flat_vectors;
-            std::vector<int> key_indices;  // Track which map key each vector belongs to
-            std::vector<std::string> keys; // Map index to string key
-            int key_counter = 0;
-
-            for (const auto &entry : data_map)
+            for (const auto &[key, vectors] : data_map)
             {
-                keys.push_back(entry.first); // Keep track of the keys
-                for (const auto &vec : entry.second)
+                keys.push_back(key);
+                for (const auto &vec : vectors)
                 {
-                    flat_vectors.insert(flat_vectors.end(), vec.begin(), vec.end());
-                    key_indices.push_back(key_counter);
-                    num_vectors++;
+                    flattened_data.insert(flattened_data.end(), vec.begin(), vec.end());
+                    category_indices.push_back(keys.size() - 1);
                 }
-                key_counter++;
+                total_vectors += vectors.size();
             }
 
-            // Allocate memory on the device (GPU)
-            double *d_vectors, *d_target_vector, *d_results, *d_max_val;
-            int *d_max_idx, *d_key_indices, *d_max_key;
-            cudaMalloc(&d_vectors, num_vectors * vector_size * sizeof(double));
+            // Step 2: Allocate device memory
+            double *d_target_vector, *d_data, *d_similarities;
+            double *d_max_similarity; // For storing max similarity
+            int *d_max_index;         // For storing max index
+
             cudaMalloc(&d_target_vector, vector_size * sizeof(double));
-            cudaMalloc(&d_results, num_vectors * sizeof(double));
-            cudaMalloc(&d_key_indices, num_vectors * sizeof(int));
-            cudaMalloc(&d_max_val, sizeof(double));
-            cudaMalloc(&d_max_idx, sizeof(int));
-            cudaMalloc(&d_max_key, sizeof(int));
+            cudaMalloc(&d_data, flattened_data.size() * sizeof(double));
+            cudaMalloc(&d_similarities, total_vectors * sizeof(double));
+            cudaMalloc(&d_max_similarity, sizeof(double) * total_vectors); // Temp max per block
+            cudaMalloc(&d_max_index, sizeof(int) * total_vectors);         // Temp max indices
 
-            // Copy data from host to device
-            cudaMemcpy(d_vectors, flat_vectors.data(), num_vectors * vector_size * sizeof(double), cudaMemcpyHostToDevice);
+            // Step 3: Copy data to device
             cudaMemcpy(d_target_vector, target_vector.data(), vector_size * sizeof(double), cudaMemcpyHostToDevice);
-            cudaMemcpy(d_key_indices, key_indices.data(), num_vectors * sizeof(int), cudaMemcpyHostToDevice);
+            cudaMemcpy(d_data, flattened_data.data(), flattened_data.size() * sizeof(double), cudaMemcpyHostToDevice);
 
-            // Initialize max_val on the device with a very small value
-            double init_max = -DBL_MAX;
-            cudaMemcpy(d_max_val, &init_max, sizeof(double), cudaMemcpyHostToDevice);
+            // Step 4: Launch kernel to compute similarities
+            int threadsPerBlock = 256;
+            int blocksPerGrid = (total_vectors + threadsPerBlock - 1) / threadsPerBlock;
+            computeCosineSimilarity<<<blocksPerGrid, threadsPerBlock>>>(
+                d_target_vector, d_data, vector_size, total_vectors, d_similarities);
+            // Wait for GPU to finish
+            cudaDeviceSynchronize();
+            // Check for kernel errors
+            err = cudaGetLastError();
+            if (err != cudaSuccess)
+            {
+                std::cerr << "CUDA kernel launch failed: " << cudaGetErrorString(err) << std::endl;
+                return {0.0, "", -1};
+            }
 
-            // Set up block and grid sizes
-            int block_size = 256;
-            int grid_size = (num_vectors + block_size - 1) / block_size;
+            // Step 5: Launch reduction kernel to find the maximum similarity
+            size_t shared_memory_size = 2 * threadsPerBlock * sizeof(double); // For similarities and indices
+            findMaxSimilarity<<<blocksPerGrid, threadsPerBlock, shared_memory_size>>>(
+                d_similarities, total_vectors, d_max_similarity, d_max_index);
+            // Wait for GPU to finish
+            cudaDeviceSynchronize();
+            // Check for kernel errors
+            err = cudaGetLastError();
+            if (err != cudaSuccess)
+            {
+                std::cerr << "CUDA kernel launch failed: " << cudaGetErrorString(err) << std::endl;
+                return {0.0, "", -1};
+            }
+            // Step 6: Copy block results to host and find global max
+            std::vector<double> block_max_similarity(blocksPerGrid);
+            std::vector<int> block_max_index(blocksPerGrid);
+            cudaMemcpy(block_max_similarity.data(), d_max_similarity, blocksPerGrid * sizeof(double), cudaMemcpyDeviceToHost);
+            cudaMemcpy(block_max_index.data(), d_max_index, blocksPerGrid * sizeof(int), cudaMemcpyDeviceToHost);
 
-            // Launch kernel to compute dot products
-            compute_dot_products<<<grid_size, block_size>>>(d_vectors, d_target_vector, d_results, num_vectors, vector_size);
+            // Step 7: Find the global max similarity on the host
+            double best_similarity = -1e10;
+            int best_index = -1;
+            for (int i = 0; i < blocksPerGrid; ++i)
+            {
+                if (block_max_similarity[i] > best_similarity)
+                {
+                    best_similarity = block_max_similarity[i];
+                    best_index = block_max_index[i];
+                }
+            }
 
-            // Launch kernel to find the maximum dot product, its index, and key
-            find_max_with_key<<<grid_size, block_size>>>(d_results, d_max_val, d_max_idx, d_max_key, d_key_indices, num_vectors);
+            // Step 8: Map best index back to category and local index
+            int category_index = category_indices[best_index];
+            std::string best_name = keys[category_index];
+            int local_index = best_index;
+            for (int i = 0; i < category_index; ++i)
+            {
+                local_index -= data_map.at(keys[i]).size();
+            }
 
-            // Copy the result back to the host
-            double max_similarity;
-            int max_idx, max_key;
-            cudaMemcpy(&max_similarity, d_max_val, sizeof(double), cudaMemcpyDeviceToHost);
-            cudaMemcpy(&max_idx, d_max_idx, sizeof(int), cudaMemcpyDeviceToHost);
-            cudaMemcpy(&max_key, d_max_key, sizeof(int), cudaMemcpyDeviceToHost);
-
-            // Free the device memory
-            cudaFree(d_vectors);
+            // Step 9: Free device memory
             cudaFree(d_target_vector);
-            cudaFree(d_results);
-            cudaFree(d_max_val);
-            cudaFree(d_max_idx);
-            cudaFree(d_key_indices);
-            cudaFree(d_max_key);
+            cudaFree(d_data);
+            cudaFree(d_similarities);
+            cudaFree(d_max_similarity);
+            cudaFree(d_max_index);
 
-            // Get the corresponding key and return the result
-            std::string max_key_string = keys[max_key];
-            return std::make_tuple(max_similarity, max_key_string, max_idx);
+            // Step 10: Return the best match result
+            return {best_similarity, best_name, local_index};
         }
-        else if (distance_metric == "euclidean")
+        else
         {
             // Flatten the data_map into a 2D vector and collect the keys for each vector
-            std::vector<std::string> keys;
-            std::vector<double> flattened_data;
             size_t vector_size = target_vector.size();
 
             for (const auto &pair : data_map)
@@ -215,7 +253,15 @@ namespace tensorrt_infer_core
             int blockSize = 256;
             int numBlocks = (num_vectors + blockSize - 1) / blockSize;
             computeEuclideanDistance<<<numBlocks, blockSize>>>(d_data, d_target, d_distances, vector_size, num_vectors);
-
+            // Wait for GPU to finish
+            cudaDeviceSynchronize();
+            // Check for kernel errors
+            err = cudaGetLastError();
+            if (err != cudaSuccess)
+            {
+                std::cerr << "CUDA kernel launch failed: " << cudaGetErrorString(err) << std::endl;
+                return {0.0, "", -1};
+            }
             // Copy distances back to host
             std::vector<double> distances(num_vectors);
             cudaMemcpy(distances.data(), d_distances, num_vectors * sizeof(double), cudaMemcpyDeviceToHost);

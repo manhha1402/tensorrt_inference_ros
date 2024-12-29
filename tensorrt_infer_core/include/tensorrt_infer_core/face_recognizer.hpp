@@ -18,8 +18,8 @@ namespace tensorrt_infer_core
     public:
         FaceRecognizer(const rclcpp::NodeOptions &options = rclcpp::NodeOptions(),
                        const std::string node_name = "face_recognition_node");
-        // void
-        // detect_rgbd_callback(const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const;
+        void
+        detect_rgbd_callback(const realsense2_camera_msgs::msg::RGBD::SharedPtr rgbd_msg) const;
         void
         detect_rgb_callback(const sensor_msgs::msg::Image::SharedPtr rgb_msg) const;
 
@@ -45,6 +45,7 @@ namespace tensorrt_infer_core
         float rec_l2_thres_ = 1.0;
         std::string distance_metric_ = "euclidean"; // euclidean
         std::string camera_topic_ = "/ros2_ipcamera/composition/image_raw";
+        std::string rgbd_topic_ = "/camera/camera/rgbd";
 
     private:
         bool initModel();

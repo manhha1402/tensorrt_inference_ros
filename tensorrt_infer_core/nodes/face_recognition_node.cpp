@@ -11,5 +11,6 @@ int main(int argc, char **argv)
     executor.add_node(detection_node);
     executor.spin();
     rclcpp::shutdown();
+
     return 0;
 }

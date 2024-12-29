@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.2)
-project(tensorrt_infer_core)
+project(tensorrt_infer_core LANGUAGES CXX CUDA)
 include(cmake/project_version.cmake)
 
 # Save the command line compile commands in the build output
@@ -9,12 +9,21 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+
 # Default to release build
 if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 message( STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}" )
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+# By default we build for the native cuda architecture. Customize by passing
+# '-DCMAKE_CUDA_ARCHITECTURES=89;75;72' to cmake.
+if (DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set(CMAKE_CUDA_ARCHITECTURES_SET_EXTERNALLY TRUE)
+else()
+  set(CMAKE_CUDA_ARCHITECTURES_SET_EXTERNALLY FALSE)
+endif()
+include(cmake/cuda/setup_compute_capability.cmake)
 
 
 
@@ -36,7 +45,6 @@ find_package(tf2_eigen)
 set(dependencies
   rclcpp
   sensor_msgs
-
   ament_index_cpp
   realsense2_camera_msgs
   tf2_eigen
@@ -51,13 +59,13 @@ if (OPENMP_FOUND)
 endif()
 
 find_package(tensorrt_inference REQUIRED)
+find_package(CUDAToolkit REQUIRED)
 
 set(Eigen3_INCLUDE_DIRS /usr/include/eigen3)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED NO_MODULE PATHS /usr/local NO_DEFAULT_PATH)
 
 include("${CMAKE_SOURCE_DIR}/cmake/find_cuda.cmake")
-find_package(CUDA REQUIRED)
 find_package(fmt REQUIRED)
 find_package(yaml-cpp)
 
@@ -71,19 +79,8 @@ include_directories("/usr/local/include/mongocxx/v_noabi")
 include_directories("/usr/local/include/bsoncxx/v_noabi")
 
 
-cuda_add_library(similarity SHARED
-  src/similarity.cu
-)
-set_target_properties(similarity PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-
-target_include_directories(similarity PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-  ${CUDA_INCLUDE_DIRS}
-  PRIVATE ${CMAKE_CURRENT_BINARY_DIR}  # for private headers generated during build
-  )
-target_link_libraries(similarity ${CUDA_LIBRARIES} )
 add_library(${PROJECT_NAME}_lib SHARED
+    src/similarity.cu
     src/conversions.cpp
     src/dynamic_params.cpp
     src/ros_param_backend.cpp
@@ -118,7 +115,6 @@ target_link_libraries(${PROJECT_NAME}_lib
                       ${YAML_CPP_LIBRARIES} 
                       fmt
                       ${LIBMONGOCXX_LIBRARIES}
-                      similarity
                       )
 
 
@@ -142,7 +138,7 @@ install(
 
 # Install the library target.
 install(
-  TARGETS ${PROJECT_NAME}_lib similarity 
+  TARGETS ${PROJECT_NAME}_lib  
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -157,7 +153,7 @@ install(TARGETS tensorrt_inference_node license_plate_detector_node face_recogni
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
-ament_export_dependencies(${dependencies})
+ament_export_dependencies(${dependencies} CUDAToolkit)
 ament_package()
 
 include(cmake/package_debian.cmake)
